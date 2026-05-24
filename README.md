@@ -1,19 +1,19 @@
 # Helldivers Intel — Galactic War Intelligence Agent
 
-A strategic dashboard for Helldivers 2's Galactic War, powered by Claude Haiku 4.5.
+A strategic dashboard for Helldivers 2's Galactic War, with pluggable AI providers (Anthropic, Fireworks, or Cerebras).
 
 ## What it does
 
 - Polls the community Helldivers 2 API every 60 seconds
 - Builds a normalized `WarSnapshot` with pre-computed strategic context (gambits, siege candidates, player spread, ramp-up detection)
-- Sends the snapshot to Claude Haiku every 5 minutes for AI-driven strategic recommendations
+- Sends the snapshot to the configured AI provider every 5 minutes for strategic recommendations
 - Serves a React dashboard showing critical alerts, priority planets, gambit opportunities, and siege maps
 
 ## Stack
 
 - **Backend:** Node.js 20 + Express + TypeScript
 - **Frontend:** React 18 + Vite + Tailwind CSS + TanStack Query
-- **AI:** Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`)
+- **AI:** Provider-configurable (Anthropic, Fireworks, or Cerebras)
 - **Deployment:** Render (single web service — API + static frontend from one origin)
 
 ## Local development
@@ -22,9 +22,9 @@ A strategic dashboard for Helldivers 2's Galactic War, powered by Claude Haiku 4
 # 1. Install dependencies
 npm ci
 
-# 2. Copy env and add your Anthropic key
+# 2. Copy env and configure your provider
 cp .env.example .env
-# Edit .env: set ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env: set AI_PROVIDER and the matching API key/model vars
 
 # 3. Run server + client dev servers concurrently
 npm run dev
@@ -36,7 +36,7 @@ The client dev server proxies `/api` to `localhost:8080`.
 
 1. Connect your GitHub repo to Render
 2. Render reads `render.yaml` and creates a Web Service
-3. Set `ANTHROPIC_API_KEY` in Render dashboard → Environment
+3. Set `AI_PROVIDER` and the matching provider API key in Render dashboard → Environment
 4. Add `RENDER_DEPLOY_HOOK_URL` as a GitHub repo secret for the deploy workflow
 5. Push to `main` — CI runs, then the deploy workflow triggers Render
 
@@ -78,8 +78,23 @@ Run the container:
 
 ```bash
 docker run --rm -p 8080:8080 \
+  -e AI_PROVIDER=anthropic \
   -e ANTHROPIC_API_KEY=sk-ant-... \
   -e HELLDIVERS_USER_AGENT="helldivers-intel/1.0 (docker)" \
+  helldivers-intel
+
+# Fireworks example
+docker run --rm -p 8080:8080 \
+  -e AI_PROVIDER=fireworks \
+  -e FIREWORKS_API_KEY=... \
+  -e FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v3p1 \
+  helldivers-intel
+
+# Cerebras example
+docker run --rm -p 8080:8080 \
+  -e AI_PROVIDER=cerebras \
+  -e CEREBRAS_API_KEY=... \
+  -e CEREBRAS_MODEL=llama-4-scout-17b-16e-instruct \
   helldivers-intel
 ```
 

@@ -33,7 +33,7 @@ If changes are required, review tests first and document reasoning in the PR.
 - Health endpoint: `/api/health`.
 - Runtime container must use a non-root user.
 - Secrets are runtime-only (never baked into images/bundles).
-- Deployment target: Render Docker web service.
+- Primary deployment target: self-hosted Docker server (Render is optional).
 
 ## Validation
 Run before handoff:

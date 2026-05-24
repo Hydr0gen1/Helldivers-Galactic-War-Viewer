@@ -7,7 +7,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      AI_PROVIDER: ${AI_PROVIDER:-anthropic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      FIREWORKS_API_KEY: ${FIREWORKS_API_KEY:-}
+      CEREBRAS_API_KEY: ${CEREBRAS_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
+      FIREWORKS_MODEL: ${FIREWORKS_MODEL:-accounts/fireworks/models/deepseek-v3p1}
+      CEREBRAS_MODEL: ${CEREBRAS_MODEL:-llama-4-scout-17b-16e-instruct}
       HELLDIVERS_USER_AGENT: ${HELLDIVERS_USER_AGENT:-helldivers-intel/1.0 (docker-compose)}
       NODE_ENV: production
       PORT: 8080

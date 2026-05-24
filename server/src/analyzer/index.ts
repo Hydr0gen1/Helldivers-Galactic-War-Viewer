@@ -2,7 +2,7 @@ import { config } from '../config.js';
 import { logger } from '../logger.js';
 import { memoryStore } from '../cache/memoryStore.js';
 import { CACHE_KEYS } from '../cache/keys.js';
-import { callHaiku } from './anthropicClient.js';
+import { createAiProvider } from './providers/index.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt.js';
 import { RecommendationSchema } from './schema.js';
 import { repairJson } from './repair.js';
@@ -12,6 +12,7 @@ const FRESH_MS = config.ANALYZER_INTERVAL_MS;
 const GRACE_MS = FRESH_MS * 2;
 
 const seenCriticalDefenses = new Set<string>();
+const aiProvider = createAiProvider();
 
 export function startAnalyzer(): void {
   logger.info('Starting analyzer');
@@ -52,7 +53,12 @@ async function analyze(): Promise<void> {
   const userPrompt = buildUserPrompt(snapshot);
 
   try {
-    const raw = await callHaiku(SYSTEM_PROMPT, userPrompt);
+    const raw = await aiProvider.analyze({
+      systemPrompt: SYSTEM_PROMPT,
+      userPrompt,
+      maxTokens: config.ANALYZER_MAX_TOKENS,
+      timeoutMs: config.ANALYZER_TIMEOUT_MS,
+    });
     let recommendation: Recommendation;
 
     try {
@@ -62,7 +68,7 @@ async function analyze(): Promise<void> {
         const repaired = repairJson(raw);
         recommendation = { ...RecommendationSchema.parse(JSON.parse(repaired)), generatedAt: new Date().toISOString() };
       } catch (e2) {
-        logger.warn({ rawTruncated: raw.slice(0, 2048), err: String(e2) }, 'Haiku output unparseable after repair — keeping previous');
+        logger.warn({ rawTruncated: raw.slice(0, 2048), err: String(e2) }, 'AI provider output unparseable after repair — keeping previous');
         const prev = memoryStore.get<Recommendation>(CACHE_KEYS.RECOMMENDATION);
         if (prev) {
           memoryStore.setWithGrace(
@@ -78,7 +84,7 @@ async function analyze(): Promise<void> {
     memoryStore.setWithGrace(CACHE_KEYS.RECOMMENDATION, recommendation, FRESH_MS, GRACE_MS);
     logger.info('Recommendation updated');
   } catch (e) {
-    logger.error(e, 'Haiku call failed');
+    logger.error(e, 'AI provider call failed');
     const prev = memoryStore.get<Recommendation>(CACHE_KEYS.RECOMMENDATION);
     if (prev) {
       memoryStore.setWithGrace(
