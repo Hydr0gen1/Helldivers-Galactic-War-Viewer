@@ -1,0 +1,132 @@
+import { config } from '../config.js';
+import { logger } from '../logger.js';
+import { memoryStore } from '../cache/memoryStore.js';
+import { CACHE_KEYS } from '../cache/keys.js';
+import { helldiversFetch } from './helldiversClient.js';
+import { buildSnapshot } from './snapshotBuilder.js';
+import {
+  WarStatusSchema, PlanetSchema, CampaignSchema, AssignmentSchema,
+  ENDPOINTS
+} from './endpoints.js';
+import { z } from 'zod';
+import type { WarSnapshot } from '../domain/types.js';
+
+const FRESH_MS = 75_000;
+const GRACE_MS = 120_000;
+const ASSIGN_FRESH_MS = 6 * 60_000;
+const ASSIGN_GRACE_MS = 10 * 60_000;
+
+let running = false;
+let pollCount = 0;
+
+export function startPoller(onSnapshot?: (s: WarSnapshot) => void): void {
+  logger.info('Starting poller');
+  schedulePoll(onSnapshot);
+}
+
+function schedulePoll(onSnapshot?: (s: WarSnapshot) => void) {
+  const interval = config.POLL_INTERVAL_MS;
+  const startAt = Date.now();
+
+  poll(onSnapshot).catch(e => logger.error(e, 'Poll cycle error'));
+
+  setTimeout(() => {
+    if (!running) {
+      schedulePoll(onSnapshot);
+    } else {
+      logger.warn('Previous poll still running, skipping cycle');
+      schedulePoll(onSnapshot);
+    }
+  }, interval - (Date.now() - startAt));
+}
+
+async function poll(onSnapshot?: (s: WarSnapshot) => void) {
+  running = true;
+  pollCount++;
+  const cycleId = pollCount;
+  logger.debug({ cycleId }, 'Poll cycle start');
+
+  const apiHealth: WarSnapshot['apiHealth'] = {
+    warStatus: 'ok',
+    planets: 'ok',
+    campaigns: 'ok',
+    assignments: 'ok',
+  };
+
+  // Fetch war status
+  const warStatusResult = await helldiversFetch(ENDPOINTS.WAR_STATUS, WarStatusSchema);
+  let warStatus: z.infer<typeof WarStatusSchema>;
+  if (warStatusResult.ok) {
+    memoryStore.setWithGrace(CACHE_KEYS.WAR_STATUS, warStatusResult.value, FRESH_MS, GRACE_MS);
+    warStatus = warStatusResult.value;
+  } else {
+    logger.warn({ err: warStatusResult.error.message }, 'War status fetch failed');
+    const cached = memoryStore.get<z.infer<typeof WarStatusSchema>>(CACHE_KEYS.WAR_STATUS);
+    if (!cached) { apiHealth.warStatus = 'error'; running = false; return; }
+    apiHealth.warStatus = cached.stale ? 'stale' : 'ok';
+    warStatus = cached.value;
+  }
+
+  // Fetch planets
+  const planetsResult = await helldiversFetch(ENDPOINTS.PLANETS, z.array(PlanetSchema));
+  let planets: z.infer<typeof PlanetSchema>[];
+  if (planetsResult.ok) {
+    memoryStore.setWithGrace(CACHE_KEYS.PLANETS, planetsResult.value, FRESH_MS, GRACE_MS);
+    planets = planetsResult.value;
+  } else {
+    logger.warn({ err: planetsResult.error.message }, 'Planets fetch failed');
+    const cached = memoryStore.get<z.infer<typeof PlanetSchema>[]>(CACHE_KEYS.PLANETS);
+    if (!cached) { apiHealth.planets = 'error'; running = false; return; }
+    apiHealth.planets = cached.stale ? 'stale' : 'ok';
+    planets = cached.value;
+  }
+
+  // Fetch campaigns
+  const campaignsResult = await helldiversFetch(ENDPOINTS.CAMPAIGNS, z.array(CampaignSchema));
+  let campaigns: z.infer<typeof CampaignSchema>[];
+  if (campaignsResult.ok) {
+    memoryStore.setWithGrace(CACHE_KEYS.CAMPAIGNS, campaignsResult.value, FRESH_MS, GRACE_MS);
+    campaigns = campaignsResult.value;
+  } else {
+    logger.warn({ err: campaignsResult.error.message }, 'Campaigns fetch failed');
+    const cached = memoryStore.get<z.infer<typeof CampaignSchema>[]>(CACHE_KEYS.CAMPAIGNS);
+    if (!cached) { apiHealth.campaigns = 'error'; running = false; return; }
+    apiHealth.campaigns = cached.stale ? 'stale' : 'ok';
+    campaigns = cached.value;
+  }
+
+  // Fetch assignments (lower frequency — reuse cache more aggressively)
+  const assignCached = memoryStore.get<z.infer<typeof AssignmentSchema>[]>(CACHE_KEYS.ASSIGNMENTS);
+  let assignments: z.infer<typeof AssignmentSchema>[];
+  if (assignCached && !assignCached.stale) {
+    assignments = assignCached.value;
+    apiHealth.assignments = 'ok';
+  } else {
+    const assignResult = await helldiversFetch(ENDPOINTS.ASSIGNMENTS, z.array(AssignmentSchema));
+    if (assignResult.ok) {
+      memoryStore.setWithGrace(CACHE_KEYS.ASSIGNMENTS, assignResult.value, ASSIGN_FRESH_MS, ASSIGN_GRACE_MS);
+      assignments = assignResult.value;
+    } else {
+      logger.warn({ err: assignResult.error.message }, 'Assignments fetch failed');
+      if (!assignCached) { apiHealth.assignments = 'error'; assignments = []; }
+      else {
+        apiHealth.assignments = 'stale';
+        assignments = assignCached.value;
+      }
+    }
+  }
+
+  const staleStatuses = Object.values(apiHealth).filter(s => s !== 'ok');
+  const staleSeconds = staleStatuses.length > 0 ? 90 : 0;
+
+  try {
+    const snapshot = buildSnapshot(warStatus, planets, campaigns, assignments, staleSeconds, apiHealth);
+    memoryStore.setWithGrace(CACHE_KEYS.SNAPSHOT, snapshot, FRESH_MS, GRACE_MS * 2);
+    logger.info({ cycleId, campaigns: campaigns.length }, 'Snapshot built');
+    onSnapshot?.(snapshot);
+  } catch (e) {
+    logger.error(e, 'Snapshot build failed');
+  }
+
+  running = false;
+}

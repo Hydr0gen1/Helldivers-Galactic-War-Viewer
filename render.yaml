@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: helldivers-intel
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: POLL_INTERVAL_MS
+        value: 60000
+      - key: ANALYZER_INTERVAL_MS
+        value: 300000
+      - key: HELLDIVERS_USER_AGENT
+        value: helldivers-intel/1.0 (github.com/hydr0gen1/helldivers-galactic-war-viewer)
