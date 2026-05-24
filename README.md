@@ -65,3 +65,27 @@ Poller (60s) → WarSnapshot cache → Analyzer (5min) → Recommendation cache
 ```
 
 See `docs/ARCHITECTURE.md` for full details.
+
+
+## Docker
+
+Build the image:
+
+```bash
+docker build -t helldivers-intel .
+```
+
+Run the container:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e HELLDIVERS_USER_AGENT="helldivers-intel/1.0 (docker)" \
+  helldivers-intel
+```
+
+Health endpoint:
+
+```bash
+curl http://localhost:8080/api/health
+```
