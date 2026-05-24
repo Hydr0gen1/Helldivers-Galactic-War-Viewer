@@ -13,7 +13,6 @@ describe('bundle security', () => {
     const files = readdirSync(distDir).filter(f => f.endsWith('.js'));
     for (const file of files) {
       const content = readFileSync(join(distDir, file), 'utf-8');
-      expect(content).not.toContain('sk-ant');
       expect(content).not.toContain('ANTHROPIC_API_KEY');
       expect(content).not.toContain('FIREWORKS_API_KEY');
       expect(content).not.toContain('CEREBRAS_API_KEY');

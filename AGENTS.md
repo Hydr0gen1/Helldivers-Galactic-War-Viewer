@@ -29,11 +29,13 @@ If changes are required, review tests first and document reasoning in the PR.
 - Consult the XML only when curated docs are insufficient.
 
 ## Docker Runtime Expectations
+- AI provider logic must remain provider-agnostic (`anthropic`, `fireworks`, `cerebras`).
+- Anthropic support is optional and must not be treated as mandatory.
 - Application listens on port `8080`.
 - Health endpoint: `/api/health`.
 - Runtime container must use a non-root user.
 - Secrets are runtime-only (never baked into images/bundles).
-- Primary deployment target: self-hosted Docker server (Render is optional).
+- Primary deployment target: self-hosted Docker server (Render is not required).
 
 ## Validation
 Run before handoff:
