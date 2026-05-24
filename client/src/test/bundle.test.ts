@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 describe('bundle security', () => {
-  it('built client bundle contains no Anthropic API key patterns', async () => {
+  it('built client bundle contains no AI provider API key patterns', async () => {
     const distDir = join(process.cwd(), 'dist', 'assets');
     if (!existsSync(distDir)) {
       // Skip if not yet built
@@ -15,6 +15,8 @@ describe('bundle security', () => {
       const content = readFileSync(join(distDir, file), 'utf-8');
       expect(content).not.toContain('sk-ant');
       expect(content).not.toContain('ANTHROPIC_API_KEY');
+      expect(content).not.toContain('FIREWORKS_API_KEY');
+      expect(content).not.toContain('CEREBRAS_API_KEY');
     }
   });
 });

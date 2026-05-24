@@ -7,8 +7,20 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
+      - key: AI_PROVIDER
+        value: anthropic
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: FIREWORKS_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5-20251001
+      - key: FIREWORKS_MODEL
+        value: accounts/fireworks/models/deepseek-v3p1
+      - key: CEREBRAS_MODEL
+        value: llama-4-scout-17b-16e-instruct
       - key: NODE_ENV
         value: production
       - key: PORT

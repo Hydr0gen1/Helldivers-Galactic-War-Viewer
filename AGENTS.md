@@ -25,7 +25,7 @@ If changes are required, review tests first and document reasoning in the PR.
 
 ## Knowledge sources
 - Preferred references: `docs/DOMAIN_KNOWLEDGE.md` and `docs/game-mechanics/`.
-- Raw wiki archive location: `archive/wiki/HelldiversWiki.xml`.
+- Raw wiki archive location: `archive/wiki/Helldivers+Wiki-20260523235840.xml`.
 - Consult the XML only when curated docs are insufficient.
 
 ## Docker Runtime Expectations
@@ -33,7 +33,7 @@ If changes are required, review tests first and document reasoning in the PR.
 - Health endpoint: `/api/health`.
 - Runtime container must use a non-root user.
 - Secrets are runtime-only (never baked into images/bundles).
-- Deployment target: Render Docker web service.
+- Primary deployment target: self-hosted Docker server (Render is optional).
 
 ## Validation
 Run before handoff:
@@ -48,6 +48,6 @@ Run before handoff:
 - Prefer curated markdown docs before raw XML.
 
 ## Large/raw data to avoid recursively scanning
-- `archive/wiki/HelldiversWiki.xml`
+- `archive/wiki/Helldivers+Wiki-20260523235840.xml`
 - build artifacts (`client/dist`, `server/dist`)
 - dependency trees (`node_modules`)
