@@ -13,4 +13,9 @@ jobs:
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL GitHub secret is not set."
+            echo "Add it under: GitHub Repo → Settings → Secrets and variables → Actions"
+            exit 1
+          fi
           curl -fsSL -X POST "$RENDER_DEPLOY_HOOK_URL"
