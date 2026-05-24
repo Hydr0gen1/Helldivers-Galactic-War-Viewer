@@ -14,7 +14,7 @@ A strategic dashboard for Helldivers 2's Galactic War, with pluggable AI provide
 - **Backend:** Node.js 20 + Express + TypeScript
 - **Frontend:** React 18 + Vite + Tailwind CSS + TanStack Query
 - **AI:** Provider-configurable (Anthropic, Fireworks, or Cerebras)
-- **Deployment:** Render (single web service — API + static frontend from one origin)
+- **Deployment:** Self-hosted Docker (single container serving API + static frontend)
 
 ## Local development
 
@@ -32,17 +32,14 @@ npm run dev
 
 The client dev server proxies `/api` to `localhost:8080`.
 
-## Deployment (Render)
+## Deployment (Self-hosted Docker)
 
-1. Connect your GitHub repo to Render
-2. Render reads `render.yaml` and creates a Web Service
-3. Set `AI_PROVIDER` and the matching provider API key in Render dashboard → Environment
-4. Add `RENDER_DEPLOY_HOOK_URL` as a GitHub repo secret for the deploy workflow
-5. Push to `main` — CI runs, then the deploy workflow triggers Render
+Primary deployment target is a self-hosted Docker runtime (home server, VPS, or any Docker host).
 
-### Cold start note
-
-Render's free tier sleeps after 15 minutes idle. The first request after sleep returns a "warming up" state — the React client retries for up to 60 seconds. Upgrade to Render Starter ($7/mo) to eliminate sleep.
+1. Build the image: `docker build -t helldivers-intel .`
+2. Run with `AI_PROVIDER` set to one of `anthropic`, `fireworks`, or `cerebras`
+3. Provide only the matching provider API key for the selected provider
+4. Keep secrets runtime-only via environment variables (do not bake into images)
 
 ## Key design decisions
 
@@ -79,7 +76,7 @@ Run the container:
 ```bash
 docker run --rm -p 8080:8080 \
   -e AI_PROVIDER=anthropic \
-  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e ANTHROPIC_API_KEY=your-anthropic-api-key \
   -e HELLDIVERS_USER_AGENT="helldivers-intel/1.0 (docker)" \
   helldivers-intel
 

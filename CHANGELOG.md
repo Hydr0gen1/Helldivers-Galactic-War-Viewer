@@ -9,5 +9,5 @@
 - Docker CI workflow at `.github/workflows/docker.yml`.
 
 ### Changed
-- Updated `render.yaml` to use Docker runtime and `/api/health` check.
+- Deployment docs and runtime guidance now center on self-hosted Docker and `/api/health`.
 - Updated README with Docker build/run instructions.
