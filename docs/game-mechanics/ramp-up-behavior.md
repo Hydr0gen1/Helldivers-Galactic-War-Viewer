@@ -1,5 +1,9 @@
 # Ramp-Up Stabilization Window
 
-After a migration event, liberation efficiency is unstable for approximately two hours.
+Per the wiki's `Second Galactic War Mechanics` page, ramp-up is the transition period after player migration where completed operations have not yet produced a stable observed liberation trend.
 
-The `rampingUp` flag exists to suppress false-negative collapse alerts during this phase.
+Modeling guidance:
+- Ramp-up typically lasts around 2 hours, but can vary with live participation patterns.
+- Keep `rampingUp` suppression behavior to avoid false collapse alerts during this phase.
+- Do not make hard strategic judgments from the first early-sample window.
+

@@ -14,3 +14,8 @@ This project depends on mechanic-aware interpretation of community API data.
 - Preserve normalization assumptions in `server/src/poller/snapshotBuilder.ts`.
 - Preserve analyzer prompt constraints in `server/src/analyzer/prompt.ts`.
 - Read topical mechanic docs under `docs/game-mechanics/` before changing campaign logic.
+
+
+## Source snapshot
+
+- Curated gameplay docs in `docs/game-mechanics/` are aligned to the wiki export at `archive/wiki/Helldivers+Wiki-20260523235840.xml` (page: `Second Galactic War Mechanics`).
