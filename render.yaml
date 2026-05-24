@@ -1,11 +1,10 @@
 services:
   - type: web
     name: helldivers-intel
-    env: node
+    env: docker
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build
-    startCommand: npm run start
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
       - key: ANTHROPIC_API_KEY
