@@ -5,7 +5,7 @@
 - `server/src/analyzer/prompt.ts`
 - `server/src/poller/endpoints.ts`
 
-Read `SPEC.md`, `docs/DOMAIN_KNOWLEDGE.md`, and relevant `docs/game-mechanics/` files before touching strategic logic.
+Read `docs/DOMAIN_KNOWLEDGE.md` and relevant `docs/game-mechanics/` files before touching strategic logic.
 
 ## Sensitive Logic
 Do **not** casually modify:

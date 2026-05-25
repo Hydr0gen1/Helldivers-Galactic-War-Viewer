@@ -6,6 +6,7 @@ services:
     image: helldivers-intel:local
     ports:
       - "8080:8080"
+    restart: unless-stopped
     environment:
       AI_PROVIDER: ${AI_PROVIDER:-anthropic}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -17,5 +18,10 @@ services:
       HELLDIVERS_USER_AGENT: ${HELLDIVERS_USER_AGENT:-helldivers-intel/1.0 (docker-compose)}
       NODE_ENV: production
       PORT: 8080
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       POLL_INTERVAL_MS: 60000
       ANALYZER_INTERVAL_MS: 300000
+      ANALYZER_MAX_TOKENS: ${ANALYZER_MAX_TOKENS:-2000}
+      ANALYZER_TIMEOUT_MS: ${ANALYZER_TIMEOUT_MS:-30000}
+      HELLDIVERS_API_BASE: ${HELLDIVERS_API_BASE:-https://api.helldivers2.dev/api/v1}
+      HELLDIVERS_MIN_REQUEST_GAP_MS: ${HELLDIVERS_MIN_REQUEST_GAP_MS:-250}

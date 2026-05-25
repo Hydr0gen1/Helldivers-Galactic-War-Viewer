@@ -59,6 +59,15 @@ describe('snapshotBuilder', () => {
     expect(snapshot.campaigns[0].isolatedFromSuperEarth).toBe(true);
   });
 
+  it('treats missing warp neighbor data as not Super Earth controlled', () => {
+    const planet = basePlanet({ index: 1, waypoints: [999], faction: 'Terminids' });
+    const campaign = baseCampaign(planet, 0);
+    const snapshot = buildSnapshot(baseWarStatus, [planet], [campaign], [], 0, {
+      warStatus: 'ok', planets: 'ok', campaigns: 'ok', assignments: 'ok'
+    });
+    expect(snapshot.campaigns[0].isolatedFromSuperEarth).toBe(true);
+  });
+
   it('uses attacking[] source data for gambit candidates', () => {
     const defended = basePlanet({ index: 1, name: 'Aegis', faction: 'Humans', waypoints: [2, 3] });
     const attacker = basePlanet({ index: 2, name: 'Boreal', faction: 'Terminids', attacking: [1], waypoints: [1], players: 500 });
