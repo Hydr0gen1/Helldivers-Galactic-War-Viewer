@@ -5,7 +5,7 @@ const ANTHROPIC_VERSION = '2023-06-01';
 
 export function createAnthropicProvider(apiKey: string, model: string): AiProvider {
   return {
-    async analyze({ systemPrompt, userPrompt, timeoutMs }: AnalyzeInput): Promise<string> {
+    async analyze({ systemPrompt, userPrompt, maxTokens, timeoutMs }: AnalyzeInput): Promise<string> {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -19,7 +19,7 @@ export function createAnthropicProvider(apiKey: string, model: string): AiProvid
           },
           body: JSON.stringify({
             model,
-            max_tokens: 600,
+            max_tokens: maxTokens,
             temperature: 0.2,
             system: systemPrompt,
             messages: [{ role: 'user', content: userPrompt }],
