@@ -21,6 +21,10 @@ If changes are required, review tests first and document reasoning in the PR.
 
 ## Deployment/runtime guidance
 - Primary deployment target is self-hosted Docker.
+- Preferred self-host convenience startup command: `npm run dive`.
+- Optional themed shutdown command: `npm run extract`.
+- Explicit Docker Compose shutdown alias: `npm run dive:down`.
+- All npm runtime aliases wrap Docker Compose; direct Docker Compose commands are still valid.
 - Render is not required.
 - Application listens on port `8080`.
 - Health endpoint: `/api/health`.

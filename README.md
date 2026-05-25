@@ -66,10 +66,29 @@ docker run --rm -p 8080:8080 \
 
 ## Docker Compose
 
+Basic flow:
+
 ```bash
 cp .env.example .env
-docker compose up --build
+npm run dive
 ```
+
+Detached/server mode:
+
+```bash
+npm run dive:detached
+npm run dive:logs
+```
+
+Shutdown options:
+
+```bash
+npm run dive:down
+# or, themed:
+npm run extract
+```
+
+These npm scripts are convenience aliases around Docker Compose commands, and direct Docker Compose commands remain valid (for example, `docker compose up --build` and `docker compose down`).
 
 `docker-compose.yml` reads provider/runtime environment variables from `.env`.
 
