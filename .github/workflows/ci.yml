@@ -17,5 +17,5 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test --workspaces --if-present
       - run: npm run build
+      - run: npm test --workspaces --if-present
