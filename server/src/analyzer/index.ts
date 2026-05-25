@@ -27,6 +27,17 @@ function scheduleAnalysis() {
 }
 
 export async function analyzeIfNeeded(snapshot: WarSnapshot): Promise<void> {
+  const currentCritical = new Set(
+    snapshot.derived.defensesEndingSoon
+      .filter(d => d.hoursRemaining < 6)
+      .map(d => d.planetName)
+  );
+  for (const planetName of seenCriticalDefenses) {
+    if (!currentCritical.has(planetName)) {
+      seenCriticalDefenses.delete(planetName);
+    }
+  }
+
   // Re-run immediately for new critical defenses
   const newCritical = snapshot.derived.defensesEndingSoon.filter(d => {
     if (d.hoursRemaining < 6 && !seenCriticalDefenses.has(d.planetName)) {
