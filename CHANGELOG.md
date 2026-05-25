@@ -7,12 +7,18 @@
 - Repository root `AGENTS.md` with domain and validation guardrails.
 - Containerization assets: `Dockerfile`, `.dockerignore`, `docker-compose.yml`.
 - Docker CI workflow at `.github/workflows/docker.yml`.
+- Major Order task typing and planet linking when task data can be confidently decoded.
 
 ### Changed
 - Deployment docs and runtime guidance now center on self-hosted Docker and `/api/health`.
-- Updated README with Docker build/run instructions.
-- AI provider runtime now uses provider-agnostic abstraction with configurable model routing.
-- Removed Anthropic SDK coupling from server runtime dependencies.
-- Hardened self-host Docker runtime behavior (healthcheck startup tolerance, poller overlap protection, and CI ordering).
+- README/agent-facing guidance updated for Docker-first, provider-agnostic operation.
+- AI provider runtime now uses provider abstraction across Anthropic, Fireworks, and Cerebras.
+- Removed Anthropic SDK coupling; Anthropic calls now use raw HTTP/fetch.
 - Corrected analyzer provider `maxTokens` passthrough behavior.
-- Updated strategic derived signal handling for gambit source selection and siege candidate coverage.
+- Hardened Docker Compose/runtime behavior for long-running self-hosting.
+- Improved poller cache/stale fallback behavior during endpoint failures.
+- Added graceful shutdown behavior for cleaner runtime termination.
+- Unknown `/api/*` routes now return consistent JSON 404 responses.
+- Poller concurrency protections prevent overlapping poll cycles.
+- Updated strategic signal handling: gambit detection now uses actual attack source data.
+- Expanded siege candidate coverage to include enemy-held non-campaign planets.
