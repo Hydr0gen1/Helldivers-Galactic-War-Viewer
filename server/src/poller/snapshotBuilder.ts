@@ -96,6 +96,14 @@ export function buildSnapshot(
   const warDay = Math.floor((Date.now() - warStartMs) / (1000 * 60 * 60 * 24));
 
   const planetById = new Map<number, Planet>(planets.map(p => [p.index, p]));
+  const attackersByDefendedPlanet = new Map<number, number[]>();
+  for (const planet of planets) {
+    for (const defendedPlanetId of planet.attacking ?? []) {
+      const attackers = attackersByDefendedPlanet.get(defendedPlanetId) ?? [];
+      attackers.push(planet.index);
+      attackersByDefendedPlanet.set(defendedPlanetId, attackers);
+    }
+  }
 
   const totalActivePlayers = campaigns.reduce((s, c) => s + (c.planet.players ?? 0), 0);
 
@@ -233,27 +241,36 @@ export function buildSnapshot(
 
   const viableGambits: GambitOpportunity[] = [];
   for (const defense of defenseCampaigns) {
-    // Source planet: find a liberation campaign that has warp links pointing to this defense planet
-    for (const [, libCampaign] of liberationByPlanetId) {
-      if (libCampaign.warpLinks.includes(defense.planetId)) {
-        const gambit = computeGambitViability({
-          defensePlanetName: defense.planetName,
-          defenseHoursRemaining: defense.hoursRemaining ?? 999,
-          gambitPlanetName: libCampaign.planetName,
-          gambitLiberationPercent: libCampaign.liberationPercent,
-          gambitDecayPerHourPercent: libCampaign.decayPerHourPercent ?? 0,
-          gambitPlayerShare: libCampaign.playerShare,
-        });
-        viableGambits.push(gambit);
-      }
+    const attackingPlanetIds = attackersByDefendedPlanet.get(defense.planetId) ?? [];
+    for (const attackingPlanetId of attackingPlanetIds) {
+      const libCampaign = liberationByPlanetId.get(attackingPlanetId);
+      if (!libCampaign) continue;
+      const gambit = computeGambitViability({
+        defensePlanetName: defense.planetName,
+        defenseHoursRemaining: defense.hoursRemaining ?? 999,
+        gambitPlanetName: libCampaign.planetName,
+        gambitLiberationPercent: libCampaign.liberationPercent,
+        gambitDecayPerHourPercent: libCampaign.decayPerHourPercent ?? 0,
+        gambitPlayerShare: libCampaign.playerShare,
+      });
+      viableGambits.push(gambit);
     }
   }
 
   // Siege candidates
   const siegeCandidates: SiegeCandidate[] = [];
-  for (const campaign of normalizedCampaigns) {
-    if (campaign.campaignType === 'defense') continue; // enemy is attacking us — not a siege candidate
-    const neighbors = campaign.warpLinks.map(id => {
+  const activeDefensePlanetIds = new Set(
+    normalizedCampaigns
+      .filter(c => c.campaignType === 'defense')
+      .map(c => c.planetId)
+  );
+
+  for (const planet of planets) {
+    const faction = factionFromString(planet.faction);
+    if (faction === 'Humans') continue;
+    if (activeDefensePlanetIds.has(planet.index)) continue;
+
+    const neighbors = (planet.waypoints ?? []).map(id => {
       const neighbor = planetById.get(id);
       return {
         name: neighbor?.name ?? `Planet ${id}`,
@@ -261,8 +278,8 @@ export function buildSnapshot(
       };
     });
     const candidate = computeSiegeCandidate({
-      planetName: campaign.planetName,
-      faction: campaign.faction,
+      planetName: planet.name,
+      faction,
       warpLinkNeighbors: neighbors,
     });
     if (candidate) siegeCandidates.push(candidate);
