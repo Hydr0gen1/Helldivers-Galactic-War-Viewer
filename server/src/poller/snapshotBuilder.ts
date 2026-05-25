@@ -14,8 +14,8 @@ import { logger } from '../logger.js';
 type AssignmentTask = Assignment['tasks'][number];
 
 const UNKNOWN_MO_TASK_TYPES = new Set<number>();
-const UNKNOWN_MO_VALUE_TYPES = new Set<number>();
-
+// Numeric MO mappings are based on currently observed/community assignment schema;
+// update these constants if the upstream API schema changes.
 const MAJOR_ORDER_TASK_TYPE_MAP: Record<number, MajorOrder['progress'][number]['type']> = {
   11: 'liberation',
   12: 'defense',
@@ -120,9 +120,6 @@ export function extractRelevantPlanetIds(tasks: AssignmentTask[]): number[] {
       const valueType = valueTypes[i];
       if (valueType === MAJOR_ORDER_PLANET_VALUE_TYPE) {
         ids.add(value);
-      } else if (!UNKNOWN_MO_VALUE_TYPES.has(valueType)) {
-        UNKNOWN_MO_VALUE_TYPES.add(valueType);
-        logger.warn({ valueType }, 'Unknown major-order task.valueType encountered');
       }
     }
   }
