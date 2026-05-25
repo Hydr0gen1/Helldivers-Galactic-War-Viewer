@@ -11,6 +11,20 @@ import { memoryStore } from '../cache/memoryStore.js';
 import { CACHE_KEYS } from '../cache/keys.js';
 import { logger } from '../logger.js';
 
+type AssignmentTask = Assignment['tasks'][number];
+
+const UNKNOWN_MO_TASK_TYPES = new Set<number>();
+const UNKNOWN_MO_VALUE_TYPES = new Set<number>();
+
+const MAJOR_ORDER_TASK_TYPE_MAP: Record<number, MajorOrder['progress'][number]['type']> = {
+  11: 'liberation',
+  12: 'defense',
+  2: 'kill_count',
+  3: 'item_gather',
+};
+
+const MAJOR_ORDER_PLANET_VALUE_TYPE = 12;
+
 // planet ID -> array of {ts, players}
 interface PlayerHistoryEntry {
   ts: number;
@@ -81,6 +95,39 @@ function factionFromString(s: string | undefined): NormalizedCampaign['faction']
   if (lower.includes('automaton') || lower.includes('bot')) return 'Automatons';
   if (lower.includes('illuminate') || lower.includes('squid')) return 'Illuminate';
   return 'Humans';
+}
+
+export function majorOrderTaskTypeFromInt(type: number | null | undefined): MajorOrder['progress'][number]['type'] {
+  if (typeof type !== 'number') return 'other';
+  const mapped = MAJOR_ORDER_TASK_TYPE_MAP[type];
+  if (mapped) return mapped;
+  if (!UNKNOWN_MO_TASK_TYPES.has(type)) {
+    UNKNOWN_MO_TASK_TYPES.add(type);
+    logger.warn({ type }, 'Unknown major-order task.type; defaulting to other');
+  }
+  return 'other';
+}
+
+export function extractRelevantPlanetIds(tasks: AssignmentTask[]): number[] {
+  const ids = new Set<number>();
+
+  for (const task of tasks) {
+    const values = task.values ?? [];
+    const valueTypes = task.valueTypes ?? [];
+
+    for (let i = 0; i < Math.min(values.length, valueTypes.length); i += 1) {
+      const value = values[i];
+      const valueType = valueTypes[i];
+      if (valueType === MAJOR_ORDER_PLANET_VALUE_TYPE) {
+        ids.add(value);
+      } else if (!UNKNOWN_MO_VALUE_TYPES.has(valueType)) {
+        UNKNOWN_MO_VALUE_TYPES.add(valueType);
+        logger.warn({ valueType }, 'Unknown major-order task.valueType encountered');
+      }
+    }
+  }
+
+  return [...ids];
 }
 
 export function buildSnapshot(
@@ -296,13 +343,13 @@ export function buildSnapshot(
       const current = a.progress[i] ?? 0;
       const target = task.values[0] ?? 1;
       return {
-        type: 'other' as const,
+        type: majorOrderTaskTypeFromInt(task.type),
         current,
         target,
         percent: target > 0 ? current / target : 0,
       };
     }),
-    relevantPlanetIds: [],
+    relevantPlanetIds: extractRelevantPlanetIds(a.tasks),
   }));
 
   return {
