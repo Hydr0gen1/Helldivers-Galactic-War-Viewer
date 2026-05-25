@@ -44,6 +44,7 @@ async function poll(onSnapshot?: (s: WarSnapshot) => void) {
       campaigns: 'ok',
       assignments: 'ok',
     };
+    let maxStaleAgeMs = 0;
 
     // Fetch war status
     const warStatusResult = await helldiversFetch(ENDPOINTS.WAR_STATUS, WarStatusSchema);
@@ -56,6 +57,7 @@ async function poll(onSnapshot?: (s: WarSnapshot) => void) {
       const cached = memoryStore.get<z.infer<typeof WarStatusSchema>>(CACHE_KEYS.WAR_STATUS);
       if (!cached) { apiHealth.warStatus = 'error'; return; }
       apiHealth.warStatus = cached.stale ? 'stale' : 'ok';
+      maxStaleAgeMs = Math.max(maxStaleAgeMs, cached.ageMs);
       warStatus = cached.value;
     }
 
@@ -70,6 +72,7 @@ async function poll(onSnapshot?: (s: WarSnapshot) => void) {
       const cached = memoryStore.get<z.infer<typeof PlanetSchema>[]>(CACHE_KEYS.PLANETS);
       if (!cached) { apiHealth.planets = 'error'; return; }
       apiHealth.planets = cached.stale ? 'stale' : 'ok';
+      maxStaleAgeMs = Math.max(maxStaleAgeMs, cached.ageMs);
       planets = cached.value;
     }
 
@@ -84,6 +87,7 @@ async function poll(onSnapshot?: (s: WarSnapshot) => void) {
       const cached = memoryStore.get<z.infer<typeof CampaignSchema>[]>(CACHE_KEYS.CAMPAIGNS);
       if (!cached) { apiHealth.campaigns = 'error'; return; }
       apiHealth.campaigns = cached.stale ? 'stale' : 'ok';
+      maxStaleAgeMs = Math.max(maxStaleAgeMs, cached.ageMs);
       campaigns = cached.value;
     }
 
@@ -103,13 +107,13 @@ async function poll(onSnapshot?: (s: WarSnapshot) => void) {
         if (!assignCached) { apiHealth.assignments = 'error'; assignments = []; }
         else {
           apiHealth.assignments = 'stale';
+          maxStaleAgeMs = Math.max(maxStaleAgeMs, assignCached.ageMs);
           assignments = assignCached.value;
         }
       }
     }
 
-    const staleStatuses = Object.values(apiHealth).filter(s => s !== 'ok');
-    const staleSeconds = staleStatuses.length > 0 ? 90 : 0;
+    const staleSeconds = maxStaleAgeMs > 0 ? Math.floor(maxStaleAgeMs / 1000) : 0;
 
     try {
       const snapshot = buildSnapshot(warStatus, planets, campaigns, assignments, staleSeconds, apiHealth);

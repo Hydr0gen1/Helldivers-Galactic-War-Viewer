@@ -11,3 +11,8 @@
 ### Changed
 - Deployment docs and runtime guidance now center on self-hosted Docker and `/api/health`.
 - Updated README with Docker build/run instructions.
+- AI provider runtime now uses provider-agnostic abstraction with configurable model routing.
+- Removed Anthropic SDK coupling from server runtime dependencies.
+- Hardened self-host Docker runtime behavior (healthcheck startup tolerance, poller overlap protection, and CI ordering).
+- Corrected analyzer provider `maxTokens` passthrough behavior.
+- Updated strategic derived signal handling for gambit source selection and siege candidate coverage.

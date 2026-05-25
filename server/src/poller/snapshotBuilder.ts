@@ -179,7 +179,7 @@ export function buildSnapshot(
     const isolatedFromSuperEarth = campaignType !== 'defense' && warpLinks.length > 0 &&
       warpLinks.every(id => {
         const neighbor = planetById.get(id);
-        return neighbor && factionFromString(neighbor.faction) !== 'Humans';
+        return !neighbor || factionFromString(neighbor.faction) !== 'Humans';
       });
 
     return {

@@ -1,5 +1,6 @@
 interface Entry<T> {
   value: T;
+  setAt: number;
   freshUntil: number;
   expiresAt: number;
 }
@@ -23,16 +24,18 @@ class MemoryStore {
     }
     return {
       value: entry.value,
-      ageMs: now - (entry.freshUntil - (entry.expiresAt - entry.freshUntil)),
+      ageMs: now - entry.setAt,
       stale: now > entry.freshUntil,
     };
   }
 
   set<T>(key: string, value: T, ttlMs: number): void {
+    const now = Date.now();
     this.store.set(key, {
       value,
-      freshUntil: Date.now() + ttlMs,
-      expiresAt: Date.now() + ttlMs,
+      setAt: now,
+      freshUntil: now + ttlMs,
+      expiresAt: now + ttlMs,
     });
   }
 
@@ -40,6 +43,7 @@ class MemoryStore {
     const now = Date.now();
     this.store.set(key, {
       value,
+      setAt: now,
       freshUntil: now + freshMs,
       expiresAt: now + freshMs + graceMs,
     });
