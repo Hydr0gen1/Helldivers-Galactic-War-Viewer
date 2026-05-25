@@ -15,15 +15,15 @@ describe('anthropicProvider', () => {
 
     const provider = createAnthropicProvider('test-key', 'claude-test');
     await provider.analyze({
-      systemPrompt: 'system',
+      systemPrompt: 'sys',
       userPrompt: 'user',
-      maxTokens: 321,
-      timeoutMs: 5000,
+      maxTokens: 1234,
+      timeoutMs: 1000,
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, request] = fetchMock.mock.calls[0];
     const parsedBody = JSON.parse((request as RequestInit).body as string);
-    expect(parsedBody.max_tokens).toBe(321);
+    expect(parsedBody.max_tokens).toBe(1234);
   });
 });
