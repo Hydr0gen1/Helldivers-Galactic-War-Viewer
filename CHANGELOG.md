@@ -29,12 +29,10 @@
 ### Added
 - Local War Chronicle structured logging foundation using better-sqlite3 with Docker-persisted /app/data volume.
 - Chronicle schema/indexes are archive-oriented for future filtering by planet, campaign type, event type, major-order metadata, and timeline windows.
-
-## Unreleased
 - feat: add read-only War Archive API endpoints over local War Chronicle SQLite facts.
-
-- Optional self-hosted auto-update polling via GitHub repo checks is documented in README.
-
 - Minor Order archive section now renders from `minor_order_active` archive events when present, otherwise shows an explicit unavailable state.
 - Added lightweight local SVG battle-history charts (liberation progress, efficiency, player concentration, HP remaining) for selected planet history.
 - AI-written History Book generation remains intentionally unimplemented (future stage).
+
+### Changed
+- Optional self-hosted auto-update polling via GitHub repo checks is documented in README.
