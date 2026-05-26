@@ -22,7 +22,7 @@ cp .secrets.example.env .secrets.env
 npm run dev
 ```
 
-Set `AI_PROVIDER` in `.env` and provide the matching provider API key for that selected provider in `.secrets.env`.
+Set `AI_PROVIDER` in `.env` and keep provider API keys in `.secrets.env` only for the selected provider.
 
 ## Secrets setup
 
@@ -31,11 +31,12 @@ cp .env.example .env
 cp .secrets.example.env .secrets.env
 ```
 
-- Edit `.env` for normal runtime configuration (non-secret defaults and behavior).
-- Edit `.secrets.env` for provider API keys and sensitive values only.
+- Edit `.env` for non-secret runtime configuration (for example `AI_PROVIDER`, `FIREWORKS_BASE_URL`, and `FIREWORKS_MODEL`).
+- Edit `.secrets.env` for provider API keys and sensitive/advanced provider headers (for example `FIREWORKS_EXTRA_HEADERS_JSON`).
 - `.secrets.env` is local-only, gitignored, and must never be committed.
 - Docker Compose loads both `.env` and `.secrets.env` at runtime.
 - Only set the API key for the currently active `AI_PROVIDER`.
+- Do not duplicate API keys in `.env`.
 - `.env.example` and `.secrets.example.env` are safe committed templates.
 - Never paste secrets into prompts, issues, pull requests, Codex tasks, screenshots, logs, or generated docs.
 
@@ -145,13 +146,18 @@ Behavior notes:
 - `LOG_LEVEL`
 - `PORT`
 
-Fireworks `.env` example:
+Fireworks `.env` (non-secret) example:
 
 ```bash
 AI_PROVIDER=fireworks
-FIREWORKS_API_KEY=...
 FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
 FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v4-flash
+```
+
+Fireworks `.secrets.env` example:
+
+```bash
+FIREWORKS_API_KEY=...
 ```
 
 Choose the Fireworks model you want to run and set FIREWORKS_MODEL yourself.
