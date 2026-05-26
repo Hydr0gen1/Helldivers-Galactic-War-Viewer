@@ -26,3 +26,8 @@
 ### Added
 - Local War Chronicle structured logging foundation using better-sqlite3 with Docker-persisted /app/data volume.
 - Chronicle schema/indexes are archive-oriented for future filtering by planet, campaign type, event type, major-order metadata, and timeline windows.
+
+## Unreleased
+- feat: add read-only War Archive API endpoints over local War Chronicle SQLite facts.
+
+- Optional self-hosted auto-update polling via GitHub repo checks is documented in README.

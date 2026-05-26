@@ -68,6 +68,20 @@ export interface ChronicleConfig {
   retentionDays: number;
 }
 
+
+export interface ArchiveEventQuery {
+  from?: string;
+  to?: string;
+  eventType?: string;
+  planetId?: number;
+  limit: number;
+  offset: number;
+}
+
+export interface PlanetQuery { limit: number; offset: number; }
+export interface PlanetHistoryQuery { planetId: number; from?: string; to?: string; limit: number; }
+export interface CampaignGroupQuery { campaignType?: string; planetId?: number; limit: number; }
+
 export interface ChronicleDb {
   ensureReady: () => boolean;
   close: () => void;
@@ -75,6 +89,12 @@ export interface ChronicleDb {
   insertCampaignProgressRows: (rows: CampaignProgressRow[]) => void;
   insertWarEvents: (events: WarEventRow[]) => void;
   pruneOldRows: (retentionDays: number, nowIso: string) => void;
+  listEvents: (query: ArchiveEventQuery) => Array<Record<string, unknown>>;
+  listPlanets: (query: PlanetQuery) => Array<Record<string, unknown>>;
+  getPlanetHistory: (query: PlanetHistoryQuery) => { progress: Array<Record<string, unknown>>; events: Array<Record<string, unknown>> };
+  listCampaignGroups: (query: CampaignGroupQuery) => Array<Record<string, unknown>>;
+  listMajorOrders: (limit: number) => Array<Record<string, unknown>>;
+  getArchiveSummary: () => Record<string, unknown>;
 }
 
 export function toCampaignProgressRow(timestamp: string, campaign: NormalizedCampaign, previous?: PreviousCampaignSample): CampaignProgressRow {
