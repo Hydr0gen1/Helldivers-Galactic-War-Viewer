@@ -18,10 +18,26 @@ Helldivers Intel is a **Helldivers 2 Galactic War intelligence dashboard** for s
 ```bash
 npm ci
 cp .env.example .env
+cp .secrets.example.env .secrets.env
 npm run dev
 ```
 
-Set `AI_PROVIDER` in `.env` and provide the matching provider API key for that selected provider.
+Set `AI_PROVIDER` in `.env` and provide the matching provider API key for that selected provider in `.secrets.env`.
+
+## Secrets setup
+
+```bash
+cp .env.example .env
+cp .secrets.example.env .secrets.env
+```
+
+- Edit `.env` for normal runtime configuration (non-secret defaults and behavior).
+- Edit `.secrets.env` for provider API keys and sensitive values only.
+- `.secrets.env` is local-only, gitignored, and must never be committed.
+- Docker Compose loads both `.env` and `.secrets.env` at runtime.
+- Only set the API key for the currently active `AI_PROVIDER`.
+- `.env.example` and `.secrets.example.env` are safe committed templates.
+- Never paste secrets into prompts, issues, pull requests, Codex tasks, screenshots, logs, or generated docs.
 
 ## Self-hosted Docker
 
@@ -70,6 +86,7 @@ Basic flow:
 
 ```bash
 cp .env.example .env
+cp .secrets.example.env .secrets.env
 npm run dive
 ```
 
@@ -90,7 +107,7 @@ npm run extract
 
 These npm scripts are convenience aliases around Docker Compose commands, and direct Docker Compose commands remain valid (for example, `docker compose up --build` and `docker compose down`).
 
-`docker-compose.yml` reads provider/runtime environment variables from `.env`.
+`docker-compose.yml` reads provider/runtime environment variables from `.env` and `.secrets.env`. If `.secrets.env` is missing, create it from `.secrets.example.env` before starting Compose.
 
 Notes:
 - Runtime policy is `restart: unless-stopped`.

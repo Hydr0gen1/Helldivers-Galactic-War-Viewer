@@ -7,6 +7,9 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
+    env_file:
+      - .env
+      - .secrets.env
     environment:
       AI_PROVIDER: ${AI_PROVIDER:-anthropic}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

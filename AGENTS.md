@@ -19,6 +19,12 @@ Do **not** casually modify:
 
 If changes are required, review tests first and document reasoning in the PR.
 
+## Secrets handling for agents
+- Do not read, print, summarize, modify, or request contents of `.secrets.env` or any file matching `.secrets*.env`, except `.secrets.example.env`.
+- Use `.secrets.example.env` for documentation and examples.
+- Never include real API keys in commits, tests, logs, PR bodies, screenshots, or generated docs.
+- If a task needs provider config, reference environment variable names only.
+
 ## Deployment/runtime guidance
 - Primary deployment target is self-hosted Docker.
 - Preferred self-host convenience startup command: `npm run dive`.

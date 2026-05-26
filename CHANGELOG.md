@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Added local-only `.secrets.env` pattern for API keys and provider secrets.
 - Curated gameplay knowledge base under `docs/DOMAIN_KNOWLEDGE.md` and `docs/game-mechanics/`.
 - Frontend War Archive UI tab with archive summary cards, recent events, planet archive browser, selected-planet history panel, campaign summaries, and order archive sections.
 - Repository root `AGENTS.md` with domain and validation guardrails.
