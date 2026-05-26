@@ -9,6 +9,7 @@ interface OpenAiCompatibleOptions {
 
 export function createOpenAiCompatibleProvider(options: OpenAiCompatibleOptions): AiProvider {
   const { baseUrl, apiKey, model, providerLabel } = options;
+  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
 
   return {
     async analyze({ systemPrompt, userPrompt, maxTokens, timeoutMs }: AnalyzeInput): Promise<string> {
@@ -16,7 +17,7 @@ export function createOpenAiCompatibleProvider(options: OpenAiCompatibleOptions)
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        const response = await fetch(`${baseUrl}/chat/completions`, {
+        const response = await fetch(`${normalizedBaseUrl}/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
