@@ -20,7 +20,8 @@
     "dive:detached": "docker compose up --build -d",
     "dive:logs": "docker compose logs -f",
     "dive:down": "docker compose down",
-    "extract": "docker compose down"
+    "extract": "docker compose down",
+    "check:ai": "npm run check:ai --workspace server"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

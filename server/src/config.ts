@@ -8,9 +8,13 @@ const baseSchema = z.object({
   AI_PROVIDER: z.enum(['anthropic', 'fireworks', 'cerebras']).default('anthropic'),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   FIREWORKS_API_KEY: z.string().min(1).optional(),
+  FIREWORKS_BASE_URL: z.string().url().default('https://api.fireworks.ai/inference/v1'),
   CEREBRAS_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().default('claude-haiku-4-5-20251001'),
-  FIREWORKS_MODEL: z.string().default('accounts/fireworks/models/deepseek-v3p1'),
+  FIREWORKS_MODEL: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
+    z.string().min(1).optional(),
+  ),
   CEREBRAS_MODEL: z.string().default('llama-4-scout-17b-16e-instruct'),
   ANALYZER_MAX_TOKENS: z.coerce.number().default(600),
   ANALYZER_TIMEOUT_MS: z.coerce.number().default(20000),
@@ -39,6 +43,14 @@ const schema = baseSchema.superRefine((value, ctx) => {
       message: `${requiredKey} is required when AI_PROVIDER=${value.AI_PROVIDER}`,
     });
   }
+
+  if (value.AI_PROVIDER === 'fireworks' && !value.FIREWORKS_MODEL) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['FIREWORKS_MODEL'],
+      message: 'FIREWORKS_MODEL is required when AI_PROVIDER=fireworks',
+    });
+  }
 });
 
 export type Config = z.infer<typeof schema>;
@@ -49,6 +61,15 @@ function loadConfig(): Config {
     console.error('Invalid configuration:', result.error.format());
     process.exit(1);
   }
+
+  if (
+    result.data.AI_PROVIDER === 'fireworks'
+    && result.data.FIREWORKS_MODEL
+    && !result.data.FIREWORKS_MODEL.startsWith('accounts/')
+  ) {
+    console.warn('Fireworks model names usually need the full path, e.g. accounts/fireworks/models/deepseek-v4-flash.');
+  }
+
   return result.data;
 }
 
