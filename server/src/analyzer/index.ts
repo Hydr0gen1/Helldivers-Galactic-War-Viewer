@@ -5,7 +5,7 @@ import { CACHE_KEYS } from '../cache/keys.js';
 import { createAiProvider } from './providers/index.js';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompt.js';
 import { RecommendationSchema } from './schema.js';
-import { repairJson } from './repair.js';
+import { extractFirstJsonObject, repairJson } from './repair.js';
 import type { WarSnapshot, Recommendation } from '../domain/types.js';
 
 const FRESH_MS = config.ANALYZER_INTERVAL_MS;
@@ -13,6 +13,38 @@ const GRACE_MS = FRESH_MS * 2;
 
 const seenCriticalDefenses = new Set<string>();
 const aiProvider = createAiProvider();
+
+function truncate(raw: string, limit = 400): string {
+  return raw.length > limit ? `${raw.slice(0, limit)}…` : raw;
+}
+
+export function parseRecommendationOutput(raw: string): Recommendation {
+  const generatedAt = new Date().toISOString();
+  const parseStrict = (value: string): Recommendation =>
+    ({ ...RecommendationSchema.parse(JSON.parse(value)), generatedAt });
+
+  try {
+    return parseStrict(raw);
+  } catch (strictErr) {
+    const extracted = extractFirstJsonObject(raw);
+    if (extracted) {
+      try {
+        return parseStrict(extracted);
+      } catch {
+        // Fall through to repair path.
+      }
+    }
+
+    const repaired = repairJson(extracted ?? raw);
+    try {
+      return parseStrict(repaired);
+    } catch (repairErr) {
+      throw new Error(
+        `strict parse failed (${String(strictErr)}); repair parse failed (${String(repairErr)})`
+      );
+    }
+  }
+}
 
 export function startAnalyzer(): () => void {
   logger.info('Starting analyzer');
@@ -72,25 +104,27 @@ async function analyze(): Promise<void> {
       timeoutMs: config.ANALYZER_TIMEOUT_MS,
     });
     let recommendation: Recommendation;
-
     try {
-      recommendation = { ...RecommendationSchema.parse(JSON.parse(raw)), generatedAt: new Date().toISOString() };
-    } catch {
-      try {
-        const repaired = repairJson(raw);
-        recommendation = { ...RecommendationSchema.parse(JSON.parse(repaired)), generatedAt: new Date().toISOString() };
-      } catch (e2) {
-        logger.warn({ rawTruncated: raw.slice(0, 2048), err: String(e2) }, 'AI provider output unparseable after repair — keeping previous');
-        const prev = memoryStore.get<Recommendation>(CACHE_KEYS.RECOMMENDATION);
-        if (prev) {
-          memoryStore.setWithGrace(
-            CACHE_KEYS.RECOMMENDATION,
-            { ...prev.value, degraded: true },
-            FRESH_MS, GRACE_MS
-          );
-        }
-        return;
+      recommendation = parseRecommendationOutput(raw);
+    } catch (e2) {
+      logger.warn(
+        {
+          provider: config.AI_PROVIDER,
+          model: config.AI_PROVIDER === 'fireworks' ? config.FIREWORKS_MODEL : config.ANTHROPIC_MODEL,
+          rawSnippet: truncate(raw),
+          err: String(e2),
+        },
+        'AI provider output unparseable after strict/extract/repair parse chain — keeping previous'
+      );
+      const prev = memoryStore.get<Recommendation>(CACHE_KEYS.RECOMMENDATION);
+      if (prev) {
+        memoryStore.setWithGrace(
+          CACHE_KEYS.RECOMMENDATION,
+          { ...prev.value, degraded: true },
+          FRESH_MS, GRACE_MS
+        );
       }
+      return;
     }
 
     memoryStore.setWithGrace(CACHE_KEYS.RECOMMENDATION, recommendation, FRESH_MS, GRACE_MS);
