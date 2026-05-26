@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY server/package*.json server/
 COPY client/package*.json client/
+RUN apk add --no-cache python3 make g++
 RUN npm ci
 
 FROM node:20-alpine AS builder
@@ -25,6 +26,7 @@ COPY client/package*.json client/
 RUN npm ci --omit=dev --workspaces --include-workspace-root
 
 COPY --from=builder /app/server/dist ./server/dist
+RUN mkdir -p /app/data
 
 RUN chown -R app:app /app
 USER app

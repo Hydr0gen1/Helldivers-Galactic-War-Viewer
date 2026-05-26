@@ -18,6 +18,9 @@ const baseSchema = z.object({
   HELLDIVERS_API_BASE: z.string().url().default('https://api.helldivers2.dev/api/v1'),
   HELLDIVERS_USER_AGENT: z.string().min(1).default('helldivers-intel/1.0'),
   HELLDIVERS_MIN_REQUEST_GAP_MS: z.coerce.number().default(10000),
+  WAR_CHRONICLE_ENABLED: z.coerce.boolean().default(true),
+  WAR_CHRONICLE_DB_PATH: z.string().default('/app/data/helldivers-intel.sqlite'),
+  WAR_CHRONICLE_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
 });
 
 const schema = baseSchema.superRefine((value, ctx) => {

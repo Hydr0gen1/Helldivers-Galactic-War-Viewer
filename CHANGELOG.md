@@ -22,3 +22,7 @@
 - Poller concurrency protections prevent overlapping poll cycles.
 - Updated strategic signal handling: gambit detection now uses actual attack source data.
 - Expanded siege candidate coverage to include enemy-held non-campaign planets.
+
+### Added
+- Local War Chronicle structured logging foundation using better-sqlite3 with Docker-persisted /app/data volume.
+- Chronicle schema/indexes are archive-oriented for future filtering by planet, campaign type, event type, major-order metadata, and timeline windows.

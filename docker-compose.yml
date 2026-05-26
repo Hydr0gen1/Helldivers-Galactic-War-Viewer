@@ -25,3 +25,11 @@ services:
       ANALYZER_TIMEOUT_MS: ${ANALYZER_TIMEOUT_MS:-30000}
       HELLDIVERS_API_BASE: ${HELLDIVERS_API_BASE:-https://api.helldivers2.dev/api/v1}
       HELLDIVERS_MIN_REQUEST_GAP_MS: ${HELLDIVERS_MIN_REQUEST_GAP_MS:-250}
+      WAR_CHRONICLE_ENABLED: ${WAR_CHRONICLE_ENABLED:-true}
+      WAR_CHRONICLE_DB_PATH: ${WAR_CHRONICLE_DB_PATH:-/app/data/helldivers-intel.sqlite}
+      WAR_CHRONICLE_RETENTION_DAYS: ${WAR_CHRONICLE_RETENTION_DAYS:-30}
+    volumes:
+      - helldivers-data:/app/data
+
+volumes:
+  helldivers-data:

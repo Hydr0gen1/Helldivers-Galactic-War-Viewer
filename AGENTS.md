@@ -71,3 +71,10 @@ Run before handoff:
 - `archive/wiki/Helldivers+Wiki-20260523235840.xml`
 - build artifacts (`client/dist`, `server/dist`)
 - dependency trees (`node_modules`)
+
+
+## War Chronicle note
+- Chronicle storage is local-only SQLite at /app/data/helldivers-intel.sqlite with Docker volume persistence (helldivers-data).
+
+- War Chronicle is a passive local fact log; War Archive APIs/UI and AI narrative generation are future phases.
+- Any future narrative output must be derived from logged structured facts, not invented events.
