@@ -4,6 +4,7 @@
 
 ### Added
 - Curated gameplay knowledge base under `docs/DOMAIN_KNOWLEDGE.md` and `docs/game-mechanics/`.
+- Frontend War Archive UI tab with archive summary cards, recent events, planet archive browser, selected-planet history panel, campaign summaries, and order archive sections.
 - Repository root `AGENTS.md` with domain and validation guardrails.
 - Containerization assets: `Dockerfile`, `.dockerignore`, `docker-compose.yml`.
 - Docker CI workflow at `.github/workflows/docker.yml`.
@@ -31,3 +32,7 @@
 - feat: add read-only War Archive API endpoints over local War Chronicle SQLite facts.
 
 - Optional self-hosted auto-update polling via GitHub repo checks is documented in README.
+
+- Minor Order archive section now renders from `minor_order_active` archive events when present, otherwise shows an explicit unavailable state.
+- Added lightweight local SVG battle-history charts (liberation progress, efficiency, player concentration, HP remaining) for selected planet history.
+- AI-written History Book generation remains intentionally unimplemented (future stage).

@@ -10,6 +10,7 @@ async function apiFetch<T>(path: string): Promise<T> {
 }
 
 export const apiClient = {
+  fetch: <T>(path: string) => apiFetch<T>(path),
   snapshot: () => apiFetch<unknown>('/api/snapshot'),
   recommendation: () => apiFetch<unknown>('/api/recommendation'),
   health: () => apiFetch<unknown>('/api/health'),
