@@ -10,6 +10,7 @@ import {
 } from './endpoints.js';
 import { z } from 'zod';
 import type { WarSnapshot } from '../domain/types.js';
+import { logWarSnapshot } from '../chronicle/warChronicle.js';
 
 const FRESH_MS = 75_000;
 const GRACE_MS = 120_000;
@@ -120,6 +121,7 @@ async function poll(onSnapshot?: (s: WarSnapshot) => void) {
       memoryStore.setWithGrace(CACHE_KEYS.SNAPSHOT, snapshot, FRESH_MS, GRACE_MS * 2);
       logger.info({ cycleId, campaigns: campaigns.length }, 'Snapshot built');
       onSnapshot?.(snapshot);
+      logWarSnapshot(snapshot);
     } catch (e) {
       logger.error(e, 'Snapshot build failed');
     }

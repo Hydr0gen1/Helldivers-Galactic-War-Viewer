@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY server/package*.json server/
 COPY client/package*.json client/
+RUN apk add --no-cache python3 make g++
 RUN npm ci
 
 FROM node:20-alpine AS builder
@@ -13,20 +14,24 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
+FROM node:20-alpine AS prod-deps
+WORKDIR /app
+COPY package*.json ./
+COPY server/package*.json server/
+COPY client/package*.json client/
+RUN apk add --no-cache python3 make g++
+RUN npm ci --omit=dev --workspaces --include-workspace-root
+
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
 RUN addgroup -S app && adduser -S app -G app
 
-COPY package*.json ./
-COPY server/package*.json server/
-COPY client/package*.json client/
-RUN npm ci --omit=dev --workspaces --include-workspace-root
-
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/server/dist ./server/dist
 
-RUN chown -R app:app /app
+RUN mkdir -p /app/data && chown -R app:app /app
 USER app
 
 EXPOSE 8080

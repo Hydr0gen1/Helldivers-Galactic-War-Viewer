@@ -164,3 +164,10 @@ Raw wiki XML exists at:
 - `archive/wiki/Helldivers+Wiki-20260523235840.xml`
 
 Prefer curated markdown docs first; use raw XML only when needed.
+
+## War Chronicle
+- Local-only SQLite chronicle storage at /app/data/helldivers-intel.sqlite.
+- Docker Compose persists chronicle DB in helldivers-data volume.
+- This release logs structured campaign/event facts only (no AI narrative, no frontend UI yet).
+- This is the foundation for a future player-facing War Archive (planet/campaign/Major Order/event/timeline/efficiency views).
+- Future AI-written history chapters must be grounded in these logged facts (no invented history).
