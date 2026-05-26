@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { logger } from '../logger.js';
-import type { CampaignProgressRow, ChronicleDb, PreviousCampaignSample, WarEventRow } from './types.js';
+import { campaignLookupKey, type CampaignProgressRow, type ChronicleDb, type PreviousCampaignSample, type WarEventRow } from './types.js';
 
 const require = createRequire(import.meta.url);
 
@@ -84,13 +84,13 @@ CREATE INDEX IF NOT EXISTS idx_war_events_planet_id ON war_events(planet_id);
   return {
     ensureReady,
     close: () => { db?.close(); db = null; },
-    getLatestCampaignRows: (planetIds) => {
-      const rows = new Map<number, PreviousCampaignSample>();
-      if (!planetIds.length || !ensureReady() || !db) return rows;
-      const stmt = db.prepare('SELECT timestamp, liberation_percent, health_current, player_share, players_on_planet FROM campaign_progress_log WHERE planet_id = ? ORDER BY timestamp DESC LIMIT 1');
-      for (const planetId of planetIds) {
-        const row = stmt.get(planetId) as PreviousCampaignSample | undefined;
-        if (row) rows.set(planetId, row);
+    getLatestCampaignRows: (campaignKeys) => {
+      const rows = new Map<string, PreviousCampaignSample>();
+      if (!campaignKeys.length || !ensureReady() || !db) return rows;
+      const stmt = db.prepare('SELECT timestamp, liberation_percent, health_current, player_share, players_on_planet FROM campaign_progress_log WHERE planet_id = ? AND campaign_type = ? ORDER BY timestamp DESC LIMIT 1');
+      for (const key of campaignKeys) {
+        const row = stmt.get([key.planetId, key.campaignType]) as PreviousCampaignSample | undefined;
+        if (row) rows.set(campaignLookupKey(key.planetId, key.campaignType), row);
       }
       return rows;
     },

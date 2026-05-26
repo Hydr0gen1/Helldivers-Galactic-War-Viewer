@@ -58,7 +58,7 @@ export interface PreviousCampaignSample {
 
 export interface ChronicleEventDetectionContext {
   snapshot: WarSnapshot;
-  previousByPlanetId: Map<number, PreviousCampaignSample>;
+  previousByCampaignKey: Map<string, PreviousCampaignSample>;
   currentRows: CampaignProgressRow[];
 }
 
@@ -71,7 +71,7 @@ export interface ChronicleConfig {
 export interface ChronicleDb {
   ensureReady: () => boolean;
   close: () => void;
-  getLatestCampaignRows: (planetIds: number[]) => Map<number, PreviousCampaignSample>;
+  getLatestCampaignRows: (campaignKeys: Array<{ planetId: number; campaignType: string }>) => Map<string, PreviousCampaignSample>;
   insertCampaignProgressRows: (rows: CampaignProgressRow[]) => void;
   insertWarEvents: (events: WarEventRow[]) => void;
   pruneOldRows: (retentionDays: number, nowIso: string) => void;
@@ -105,4 +105,8 @@ export function toCampaignProgressRow(timestamp: string, campaign: NormalizedCam
     player_share_delta: previous ? campaign.playerShare - previous.player_share : 0,
     players_delta: previous ? campaign.playersOnPlanet - previous.players_on_planet : 0,
   };
+}
+
+export function campaignLookupKey(planetId: number, campaignType: string): string {
+  return `${planetId}:${campaignType}`;
 }

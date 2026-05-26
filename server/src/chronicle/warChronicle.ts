@@ -4,7 +4,7 @@ import type { WarSnapshot } from '../domain/types.js';
 import { createChronicleDb } from './db.js';
 import { detectWarEvents } from './eventDetector.js';
 import type { ChronicleDb } from './types.js';
-import { toCampaignProgressRow } from './types.js';
+import { campaignLookupKey, toCampaignProgressRow } from './types.js';
 
 export interface WarChronicle {
   logWarSnapshot: (snapshot: WarSnapshot) => void;
@@ -27,11 +27,19 @@ export function createWarChronicle(opts?: {
       try {
         if (!db.ensureReady()) return;
 
-        const previousByPlanetId = db.getLatestCampaignRows(snapshot.campaigns.map((campaign) => campaign.planetId));
+        const campaignKeys = snapshot.campaigns.map((campaign) => ({
+          planetId: campaign.planetId,
+          campaignType: campaign.campaignType,
+        }));
+        const previousByCampaignKey = db.getLatestCampaignRows(campaignKeys);
         const rows = snapshot.campaigns.map((campaign) =>
-          toCampaignProgressRow(snapshot.generatedAt, campaign, previousByPlanetId.get(campaign.planetId))
+          toCampaignProgressRow(
+            snapshot.generatedAt,
+            campaign,
+            previousByCampaignKey.get(campaignLookupKey(campaign.planetId, campaign.campaignType)),
+          )
         );
-        const events = detectWarEvents({ snapshot, previousByPlanetId, currentRows: rows });
+        const events = detectWarEvents({ snapshot, previousByCampaignKey, currentRows: rows });
 
         db.insertCampaignProgressRows(rows);
         db.insertWarEvents(events);

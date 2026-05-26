@@ -1,7 +1,7 @@
 import type { ChronicleEventDetectionContext, WarEventRow } from './types.js';
 
 export function detectWarEvents(context: ChronicleEventDetectionContext): WarEventRow[] {
-  const { snapshot, currentRows, previousByPlanetId } = context;
+  const { snapshot, currentRows, previousByCampaignKey } = context;
   const events: WarEventRow[] = [];
   const timestamp = snapshot.generatedAt;
 
@@ -80,7 +80,7 @@ export function detectWarEvents(context: ChronicleEventDetectionContext): WarEve
   // NOTE: Event coalescing/deduplication (e.g., repeated stalled signals) is intentionally
   // deferred to future War Archive API/UI layers where timeline views can aggregate events.
   for (const row of currentRows) {
-    const previous = previousByPlanetId.get(row.planet_id);
+    const previous = previousByCampaignKey.get(`${row.planet_id}:${row.campaign_type}`);
     if (previous) {
       const shareDelta = row.player_share - previous.player_share;
       if (shareDelta >= 0.05 || row.players_delta >= 5000) {

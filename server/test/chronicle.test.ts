@@ -9,13 +9,13 @@ class FakeDb {
   public createdSql = '';
   public campaignRows: CampaignProgressRow[] = [];
   public eventRows: WarEventRow[] = [];
-  public latestByPlanetId = new Map<number, unknown>();
+  public latestByCampaignKey = new Map<string, unknown>();
 
   pragma(): void {}
   exec(sql: string): void { this.createdSql = sql; }
   prepare(sql: string): { run: (params?: unknown) => unknown; get: (params?: unknown) => unknown } {
     if (sql.startsWith('SELECT timestamp')) {
-      return { run: () => undefined, get: (planetId) => this.latestByPlanetId.get(planetId as number) };
+      return { run: () => undefined, get: (params) => { const [planetId, campaignType] = params as [number, string]; return this.latestByCampaignKey.get(`${planetId}:${campaignType}`); } };
     }
     if (sql.startsWith('INSERT INTO campaign_progress_log')) {
       return { run: (params) => { this.campaignRows.push(params as CampaignProgressRow); return undefined; }, get: () => undefined };
@@ -66,7 +66,7 @@ describe('chronicle', () => {
 
   it('logs campaign progress and computes efficiency deltas', () => {
     const fake = new FakeDb();
-    fake.latestByPlanetId.set(101, { timestamp: '2026-05-26T00:00:00.000Z', liberation_percent: 78, health_current: 900000, player_share: 0.12, players_on_planet: 1200 });
+    fake.latestByCampaignKey.set('101:defense', { timestamp: '2026-05-26T00:00:00.000Z', liberation_percent: 78, health_current: 900000, player_share: 0.12, players_on_planet: 1200 });
     const db = createChronicleDb('/tmp/chronicle.sqlite', function Ctor() { return fake; } as unknown as new (dbPath: string) => FakeDb);
     const chronicle = createWarChronicle({ enabled: true, retentionDays: 30, db });
 
@@ -93,7 +93,7 @@ describe('chronicle', () => {
       health_current: 800000, health_max: 1000000, liberation_percent: 80, decay_per_hour_hp: null, player_share: 0.2, players_on_planet: 2000,
       hours_remaining: 2, ramping_up: 0, is_high_priority: 0, liberation_delta_per_hour: 0.03, health_delta_per_hour: -1000, player_share_delta: 0.1, players_delta: 7000,
     }];
-    const events = detectWarEvents({ snapshot: snapshot('2026-05-26T01:00:00.000Z'), currentRows: rows, previousByPlanetId: new Map([[101, { timestamp: '2026-05-26T00:00:00.000Z', liberation_percent: 79, health_current: 810000, player_share: 0.1, players_on_planet: 1000 }]]) });
+    const events = detectWarEvents({ snapshot: snapshot('2026-05-26T01:00:00.000Z'), currentRows: rows, previousByCampaignKey: new Map([['101:defense', { timestamp: '2026-05-26T00:00:00.000Z', liberation_percent: 79, health_current: 810000, player_share: 0.1, players_on_planet: 1000 }]]) });
     expect(events.map((e) => e.event_type)).toEqual(expect.arrayContaining(['defense_critical', 'gambit_opened', 'siege_opportunity', 'major_order_active', 'player_surge', 'campaign_stalled']));
 
     const majorOrderEvent = events.find((event) => event.event_type === 'major_order_active');
@@ -137,6 +137,32 @@ describe('chronicle', () => {
     };
     const chronicle = createWarChronicle({ enabled: true, retentionDays: 30, db });
     expect(() => chronicle.logWarSnapshot(snapshot('2026-05-26T01:00:00.000Z'))).not.toThrow();
+  });
+
+
+  it('ignores previous sample from different campaign type', () => {
+    const fake = new FakeDb();
+    fake.latestByCampaignKey.set('101:liberation', { timestamp: '2026-05-26T00:00:00.000Z', liberation_percent: 10, health_current: 900000, player_share: 0.3, players_on_planet: 3000 });
+    const db = createChronicleDb('/tmp/chronicle.sqlite', function Ctor() { return fake; } as unknown as new (dbPath: string) => FakeDb);
+    const chronicle = createWarChronicle({ enabled: true, retentionDays: 30, db });
+
+    chronicle.logWarSnapshot(snapshot('2026-05-26T01:00:00.000Z'));
+
+    expect(fake.campaignRows).toHaveLength(1);
+    expect(fake.campaignRows[0].liberation_delta_per_hour).toBeNull();
+    expect(fake.campaignRows[0].health_delta_per_hour).toBeNull();
+  });
+
+  it('uses previous sample from same planet and campaign type', () => {
+    const fake = new FakeDb();
+    fake.latestByCampaignKey.set('101:defense', { timestamp: '2026-05-26T00:00:00.000Z', liberation_percent: 78, health_current: 900000, player_share: 0.12, players_on_planet: 1200 });
+    const db = createChronicleDb('/tmp/chronicle.sqlite', function Ctor() { return fake; } as unknown as new (dbPath: string) => FakeDb);
+    const chronicle = createWarChronicle({ enabled: true, retentionDays: 30, db });
+
+    chronicle.logWarSnapshot(snapshot('2026-05-26T01:00:00.000Z'));
+
+    expect(fake.campaignRows[0].liberation_delta_per_hour).toBeCloseTo(2);
+    expect(fake.campaignRows[0].health_delta_per_hour).toBeCloseTo(-100000);
   });
 
   it('returns null per-hour deltas with no previous sample', () => {
