@@ -111,6 +111,28 @@ describe('chronicle', () => {
     expect(Array.isArray(majorOrderPayload.progress)).toBe(true);
   });
 
+  it('deduplicates identical major_order_active events within a snapshot', () => {
+    const base = snapshot('2026-05-26T01:00:00.000Z');
+    base.majorOrders = [
+      { id: 'mo-1', title: 'Defend Worlds', briefing: '', expiresAt: '2026-05-27T01:00:00.000Z', hoursRemaining: 24, relevantPlanetIds: [101], progress: [{ type: 'defense', current: 10, target: 100, percent: 0.1 }] },
+      { id: 'mo-1', title: 'Defend Worlds duplicate', briefing: '', expiresAt: '2026-05-27T01:00:00.000Z', hoursRemaining: 24, relevantPlanetIds: [101], progress: [{ type: 'defense', current: 10, target: 100, percent: 0.1 }] },
+    ];
+
+    const events = detectWarEvents({ snapshot: base, currentRows: [], previousByCampaignKey: new Map() });
+    expect(events.filter((e) => e.event_type === 'major_order_active')).toHaveLength(1);
+  });
+
+  it('keeps major_order_active events when progress differs', () => {
+    const base = snapshot('2026-05-26T01:00:00.000Z');
+    base.majorOrders = [
+      { id: 'mo-1', title: 'Defend Worlds', briefing: '', expiresAt: '2026-05-27T01:00:00.000Z', hoursRemaining: 24, relevantPlanetIds: [101], progress: [{ type: 'defense', current: 10, target: 100, percent: 0.1 }] },
+      { id: 'mo-1', title: 'Defend Worlds updated', briefing: '', expiresAt: '2026-05-27T01:00:00.000Z', hoursRemaining: 24, relevantPlanetIds: [101], progress: [{ type: 'defense', current: 20, target: 100, percent: 0.2 }] },
+    ];
+
+    const events = detectWarEvents({ snapshot: base, currentRows: [], previousByCampaignKey: new Map() });
+    expect(events.filter((e) => e.event_type === 'major_order_active')).toHaveLength(2);
+  });
+
   it('prunes older rows by retention cutoff', () => {
     let pruneCutoff: string | null = null;
     const db: ChronicleDb = {

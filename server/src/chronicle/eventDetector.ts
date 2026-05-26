@@ -1,5 +1,15 @@
 import type { ChronicleEventDetectionContext, WarEventRow } from './types.js';
 
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
 export function detectWarEvents(context: ChronicleEventDetectionContext): WarEventRow[] {
   const { snapshot, currentRows, previousByCampaignKey } = context;
   const events: WarEventRow[] = [];
@@ -50,7 +60,11 @@ export function detectWarEvents(context: ChronicleEventDetectionContext): WarEve
   }
 
   if (snapshot.majorOrders.length > 0) {
+    const seenMajorOrderActiveKeys = new Set<string>();
     for (const order of snapshot.majorOrders) {
+      const dedupeKey = `${order.id}::${order.expiresAt}::${stableStringify(order.progress)}`;
+      if (seenMajorOrderActiveKeys.has(dedupeKey)) continue;
+      seenMajorOrderActiveKeys.add(dedupeKey);
       events.push({
         timestamp,
         event_type: 'major_order_active',

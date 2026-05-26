@@ -14,6 +14,7 @@ import { logger } from '../logger.js';
 type AssignmentTask = Assignment['tasks'][number];
 
 const UNKNOWN_MO_TASK_TYPES = new Set<number>();
+const HP_MAX_DIVERGENCE_WARNED_PLANETS = new Set<number>();
 // Numeric MO mappings are based on currently observed/community assignment schema;
 // update these constants if the upstream API schema changes.
 const MAJOR_ORDER_TASK_TYPE_MAP: Record<number, MajorOrder['progress'][number]['type']> = {
@@ -97,13 +98,16 @@ function factionFromString(s: string | undefined): NormalizedCampaign['faction']
   return 'Humans';
 }
 
-export function majorOrderTaskTypeFromInt(type: number | null | undefined): MajorOrder['progress'][number]['type'] {
+export function majorOrderTaskTypeFromInt(
+  type: number | null | undefined,
+  valueTypes: number[] = [],
+): MajorOrder['progress'][number]['type'] {
   if (typeof type !== 'number') return 'other';
   const mapped = MAJOR_ORDER_TASK_TYPE_MAP[type];
   if (mapped) return mapped;
   if (!UNKNOWN_MO_TASK_TYPES.has(type)) {
     UNKNOWN_MO_TASK_TYPES.add(type);
-    logger.warn({ type }, 'Unknown major-order task.type; defaulting to other');
+    logger.warn({ type, valueTypes }, 'Unknown major-order task.type; defaulting to other');
   }
   return 'other';
 }
@@ -172,8 +176,9 @@ export function buildSnapshot(
     // HP max: 1,000,000 base + region bonuses
     const computedMax = 1_000_000 + regions.reduce((s, r) => s + computeRegionBonus(r.tier), 0);
     const apiMax = planet.maxHealth ?? 1_000_000;
-    if (Math.abs(computedMax - apiMax) / apiMax > 0.05) {
-      logger.warn({ planet: planet.name, computedMax, apiMax }, 'HP max diverges >5% from API');
+    if (Math.abs(computedMax - apiMax) / apiMax > 0.05 && !HP_MAX_DIVERGENCE_WARNED_PLANETS.has(planet.index)) {
+      HP_MAX_DIVERGENCE_WARNED_PLANETS.add(planet.index);
+      logger.warn({ planetId: planet.index, planet: planet.name, computedMax, apiMax }, 'HP max diverges >5% from API');
     }
     const healthMax = apiMax; // trust API as authoritative
     const healthCurrent = planet.health ?? healthMax;
@@ -340,7 +345,7 @@ export function buildSnapshot(
       const current = a.progress[i] ?? 0;
       const target = task.values[0] ?? 1;
       return {
-        type: majorOrderTaskTypeFromInt(task.type),
+        type: majorOrderTaskTypeFromInt(task.type, task.valueTypes ?? []),
         current,
         target,
         percent: target > 0 ? current / target : 0,

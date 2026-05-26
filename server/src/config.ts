@@ -23,6 +23,8 @@ const baseSchema = z.object({
   HELLDIVERS_API_BASE: z.string().url().default('https://api.helldivers2.dev/api/v1'),
   HELLDIVERS_USER_AGENT: z.string().min(1).default('helldivers-intel/1.0'),
   HELLDIVERS_MIN_REQUEST_GAP_MS: z.coerce.number().default(10000),
+  HELLDIVERS_SUPER_CLIENT: z.string().min(1).default('Helldivers-Galactic-War-Viewer'),
+  HELLDIVERS_SUPER_CONTACT: z.string().min(1).default('https://github.com/Hydr0gen1/Helldivers-Galactic-War-Viewer'),
   WAR_CHRONICLE_ENABLED: envBoolean.default(true),
   WAR_CHRONICLE_DB_PATH: z.string().default('/app/data/helldivers-intel.sqlite'),
   WAR_CHRONICLE_RETENTION_DAYS: z.coerce.number().int().positive().default(30),

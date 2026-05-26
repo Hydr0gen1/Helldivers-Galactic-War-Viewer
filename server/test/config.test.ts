@@ -77,4 +77,16 @@ describe('config fireworks', () => {
 
     expect(config.AI_PROVIDER).toBe('anthropic');
   });
+
+  it('sets defaults for Helldivers super headers', async () => {
+    setBaseEnv();
+    vi.stubEnv('HELLDIVERS_SUPER_CLIENT', '');
+    vi.stubEnv('HELLDIVERS_SUPER_CONTACT', '');
+    vi.unstubAllEnvs();
+    setBaseEnv();
+
+    const { config } = await import('../src/config.js');
+    expect(config.HELLDIVERS_SUPER_CLIENT).toBe('Helldivers-Galactic-War-Viewer');
+    expect(config.HELLDIVERS_SUPER_CONTACT).toBe('https://github.com/Hydr0gen1/Helldivers-Galactic-War-Viewer');
+  });
 });

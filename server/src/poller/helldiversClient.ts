@@ -33,8 +33,8 @@ export async function helldiversFetch<T>(
       headers: {
         'User-Agent': config.HELLDIVERS_USER_AGENT,
         'Accept': 'application/json',
-        'X-Super-Client': process.env.HELLDIVERS_SUPER_CLIENT ?? 'Helldivers-Galactic-War-Viewer',
-        'X-Super-Contact': process.env.HELLDIVERS_SUPER_CONTACT ?? 'https://github.com/Hydr0gen1/Helldivers-Galactic-War-Viewer',
+        'X-Super-Client': config.HELLDIVERS_SUPER_CLIENT,
+        'X-Super-Contact': config.HELLDIVERS_SUPER_CONTACT,
       },
       
       signal: AbortSignal.timeout(15000),
