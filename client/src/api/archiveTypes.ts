@@ -8,6 +8,7 @@ export interface ArchiveSummaryResponse {
     majorOrders: number;
   };
   latest: { campaignSampleAt: string | null; eventAt: string | null };
+  recentEvents: ArchiveEvent[];
 }
 
 export interface ArchiveEvent {

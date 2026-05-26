@@ -14,16 +14,17 @@ const GRACE_MS = FRESH_MS * 2;
 const seenCriticalDefenses = new Set<string>();
 const aiProvider = createAiProvider();
 
-export function startAnalyzer(): void {
+export function startAnalyzer(): () => void {
   logger.info('Starting analyzer');
-  scheduleAnalysis();
+  return scheduleAnalysis();
 }
 
-function scheduleAnalysis() {
+function scheduleAnalysis(): () => void {
   analyze().catch(e => logger.error(e, 'Analyzer error'));
-  setInterval(() => {
+  const interval = setInterval(() => {
     analyze().catch(e => logger.error(e, 'Analyzer error'));
   }, config.ANALYZER_INTERVAL_MS);
+  return () => clearInterval(interval);
 }
 
 export async function analyzeIfNeeded(snapshot: WarSnapshot): Promise<void> {

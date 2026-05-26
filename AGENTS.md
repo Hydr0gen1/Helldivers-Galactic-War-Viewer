@@ -76,12 +76,12 @@ Run before handoff:
 ## War Chronicle note
 - Chronicle storage is local-only SQLite at /app/data/helldivers-intel.sqlite with Docker volume persistence (helldivers-data).
 
-- War Chronicle is a passive local fact log; War Archive APIs/UI and AI narrative generation are future phases.
+- War Chronicle logging, War Archive API, and War Archive UI are implemented. AI-written History Book narrative generation remains future work.
 - Any future narrative output must be derived from logged structured facts, not invented events.
 
 ## War Archive API
 - `/api/archive/*` endpoints expose read-only historical facts from local Chronicle SQLite.
-- Frontend War Archive UI and AI-written History Book remain future work.
+- Frontend War Archive UI is implemented and reads `/api/archive` endpoints. AI-written History Book remains future work.
 
 - Optional self-hosted auto-update polling is acceptable for server deployments; preserve local .env secrets and volume-backed chronicle data.
 
