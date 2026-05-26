@@ -78,3 +78,9 @@ Run before handoff:
 
 - War Chronicle is a passive local fact log; War Archive APIs/UI and AI narrative generation are future phases.
 - Any future narrative output must be derived from logged structured facts, not invented events.
+
+## War Archive API
+- `/api/archive/*` endpoints expose read-only historical facts from local Chronicle SQLite.
+- Frontend War Archive UI and AI-written History Book remain future work.
+
+- Optional self-hosted auto-update polling is acceptable for server deployments; preserve local .env secrets and volume-backed chronicle data.

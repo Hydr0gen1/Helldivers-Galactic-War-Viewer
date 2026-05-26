@@ -171,3 +171,68 @@ Prefer curated markdown docs first; use raw XML only when needed.
 - This release logs structured campaign/event facts only (no AI narrative, no frontend UI yet).
 - This is the foundation for a future player-facing War Archive (planet/campaign/Major Order/event/timeline/efficiency views).
 - Future AI-written history chapters must be grounded in these logged facts (no invented history).
+
+## War Archive API
+
+Read-only endpoints under `/api/archive`: `summary`, `events`, `planets`, `planets/:planetId`, `campaigns`, and `major-orders` expose locally logged Chronicle facts. No frontend archive UI or AI narrative generation is included yet.
+
+
+## Optional self-hosted auto-update polling
+
+For a self-hosted server, you can optionally poll GitHub every ~5 minutes and only restart after a successful build:
+
+`poll GitHub → detect new commit → pull/reset → build → restart only if build succeeds`
+
+Example `/opt/helldivers-intel/update.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_DIR="/opt/helldivers-intel"
+BRANCH="main"
+
+cd "$APP_DIR"
+
+git fetch origin "$BRANCH"
+
+LOCAL_SHA="$(git rev-parse HEAD)"
+REMOTE_SHA="$(git rev-parse origin/$BRANCH)"
+
+if [ "$LOCAL_SHA" = "$REMOTE_SHA" ]; then
+  echo "No update available."
+  exit 0
+fi
+
+echo "Update available: $LOCAL_SHA -> $REMOTE_SHA"
+
+git reset --hard "origin/$BRANCH"
+
+echo "Building image..."
+docker compose build
+
+echo "Starting updated container..."
+docker compose up -d
+
+echo "Pruning old images..."
+docker image prune -f
+
+echo "Update complete."
+```
+
+```bash
+chmod +x /opt/helldivers-intel/update.sh
+```
+
+Example cron (every 5 minutes):
+
+```cron
+*/5 * * * * /opt/helldivers-intel/update.sh >> /opt/helldivers-intel/update.log 2>&1
+```
+
+Safety notes:
+- Keep `.env` only on the server (never commit secrets/API keys).
+- The script only restarts after `docker compose build` succeeds.
+- The `helldivers-data` volume preserves War Chronicle SQLite history.
+- `docker compose down` is usually unnecessary for routine updates.
+- A future GHCR image-pull deployment path may be cleaner; repo polling is acceptable for now.

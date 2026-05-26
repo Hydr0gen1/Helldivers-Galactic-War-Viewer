@@ -13,17 +13,17 @@ class FakeDb {
 
   pragma(): void {}
   exec(sql: string): void { this.createdSql = sql; }
-  prepare(sql: string): { run: (params?: unknown) => unknown; get: (params?: unknown) => unknown } {
+  prepare(sql: string): { run: (params?: unknown) => unknown; get: (params?: unknown) => unknown; all: (params?: unknown) => unknown[] } {
     if (sql.startsWith('SELECT timestamp')) {
-      return { run: () => undefined, get: (params) => { const [planetId, campaignType] = params as [number, string]; return this.latestByCampaignKey.get(`${planetId}:${campaignType}`); } };
+      return { run: () => undefined, get: (params) => { const [planetId, campaignType] = params as [number, string]; return this.latestByCampaignKey.get(`${planetId}:${campaignType}`); }, all: () => [] };
     }
     if (sql.startsWith('INSERT INTO campaign_progress_log')) {
-      return { run: (params) => { this.campaignRows.push(params as CampaignProgressRow); return undefined; }, get: () => undefined };
+      return { run: (params) => { this.campaignRows.push(params as CampaignProgressRow); return undefined; }, get: () => undefined, all: () => [] };
     }
     if (sql.startsWith('INSERT INTO war_events')) {
-      return { run: (params) => { this.eventRows.push(params as WarEventRow); return undefined; }, get: () => undefined };
+      return { run: (params) => { this.eventRows.push(params as WarEventRow); return undefined; }, get: () => undefined, all: () => [] };
     }
-    return { run: () => undefined, get: () => undefined };
+    return { run: () => undefined, get: () => undefined, all: () => [] };
   }
   transaction<T>(fn: (value: T) => void): (value: T) => void { return (value) => fn(value); }
   close(): void {}
