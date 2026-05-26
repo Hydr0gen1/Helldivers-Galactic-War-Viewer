@@ -77,6 +77,8 @@ export function detectWarEvents(context: ChronicleEventDetectionContext): WarEve
     }
   }
 
+  // NOTE: Event coalescing/deduplication (e.g., repeated stalled signals) is intentionally
+  // deferred to future War Archive API/UI layers where timeline views can aggregate events.
   for (const row of currentRows) {
     const previous = previousByPlanetId.get(row.planet_id);
     if (previous) {
