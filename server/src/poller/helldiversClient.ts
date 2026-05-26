@@ -29,10 +29,14 @@ export async function helldiversFetch<T>(
 
   try {
     const res = await fetch(url, {
+      
       headers: {
         'User-Agent': config.HELLDIVERS_USER_AGENT,
         'Accept': 'application/json',
+        'X-Super-Client': process.env.HELLDIVERS_SUPER_CLIENT ?? 'Helldivers-Galactic-War-Viewer',
+        'X-Super-Contact': process.env.HELLDIVERS_SUPER_CONTACT ?? 'https://github.com/Hydr0gen1/Helldivers-Galactic-War-Viewer',
       },
+      
       signal: AbortSignal.timeout(15000),
     });
 

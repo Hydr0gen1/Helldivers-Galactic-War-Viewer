@@ -161,7 +161,7 @@ export function buildSnapshot(
       const tier = tierFromIndex(r.regionTier ?? 1);
       const regionHealthMax = 1_000_000; // each region has its own max; use API if available
       return {
-        name: r.name,
+        name: r.name ?? 'Unknown Region',
         tier,
         healthCurrent: r.health ?? 0,
         healthMax: r.maxHealth ?? regionHealthMax,

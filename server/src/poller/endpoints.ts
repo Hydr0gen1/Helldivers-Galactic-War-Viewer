@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
 export const RegionSchema = z.object({
-  name: z.string(),
-  faction: z.string().optional(),
-  health: z.number().optional(),
-  maxHealth: z.number().optional(),
-  settingsHash: z.number().optional(),
-  regionTier: z.number().optional(),
+  name: z.string().nullable().optional(),
+  faction: z.string().nullable().optional(),
+  health: z.number().nullable().optional(),
+  maxHealth: z.number().nullable().optional(),
+  settingsHash: z.number().nullable().optional(),
+  regionTier: z.number().nullable().optional(),
 });
 
 export const PlanetSchema = z.object({
@@ -55,9 +55,9 @@ export const RewardSchema = z.object({
 
 export const AssignmentSchema = z.object({
   id: z.number(),
-  title: z.string().optional(),
-  briefing: z.string().optional(),
-  description: z.string().optional(),
+  title: z.string().nullable().optional(),
+  briefing: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   tasks: z.array(TaskSchema).default([]),
   reward: RewardSchema.optional(),
   expiration: z.string().optional(),
@@ -70,7 +70,7 @@ export type WarStatus = z.infer<typeof WarStatusSchema>;
 export type Assignment = z.infer<typeof AssignmentSchema>;
 
 export const ENDPOINTS = {
-  WAR_STATUS: '/war/status',
+  WAR_STATUS: '/war',
   PLANETS: '/planets',
   CAMPAIGNS: '/campaigns',
   ASSIGNMENTS: '/assignments',
