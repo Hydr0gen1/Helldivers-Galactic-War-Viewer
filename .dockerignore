@@ -1,8 +1,11 @@
-node_modules
 .git
+node_modules
 client/dist
 server/dist
 *.log
-.env*
+.env
+.env.*
+.secrets.env
+.secrets.*.env
 docs/
 archive/wiki/
