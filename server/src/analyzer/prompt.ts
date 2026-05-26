@@ -50,8 +50,10 @@ MECHANICS YOU MUST APPLY CORRECTLY:
 
 OUTPUT RULES:
 
-- Respond with a single JSON object, no prose before or after.
-- No markdown code fences. No leading or trailing whitespace.
+- Output EXACTLY one RFC8259-valid JSON object.
+- Do not output any text before or after the JSON object.
+- Do not output markdown, code fences, commentary, explanations, chain-of-thought, or reasoning prose outside JSON fields.
+- Do not output leading or trailing whitespace.
 - Conform exactly to the schema in the user message.
 - Each "reasoning" string ≤ 280 characters.
 - If you are uncertain about a recommendation, omit it rather than guess.

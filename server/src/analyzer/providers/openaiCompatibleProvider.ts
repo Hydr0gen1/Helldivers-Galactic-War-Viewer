@@ -7,6 +7,19 @@ interface OpenAiCompatibleOptions {
   providerLabel: string;
 }
 
+function buildStrictJsonResponseFormat() {
+  return {
+    type: 'json_schema',
+    json_schema: {
+      name: 'war_recommendation',
+      strict: true,
+      schema: {
+        type: 'object',
+      },
+    },
+  };
+}
+
 export function createOpenAiCompatibleProvider(options: OpenAiCompatibleOptions): AiProvider {
   const { baseUrl, apiKey, model, providerLabel } = options;
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
@@ -27,6 +40,7 @@ export function createOpenAiCompatibleProvider(options: OpenAiCompatibleOptions)
             model,
             temperature: 0.2,
             max_tokens: maxTokens,
+            response_format: buildStrictJsonResponseFormat(),
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
