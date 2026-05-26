@@ -12,6 +12,7 @@
 - Major Order task typing and planet linking when task data can be confidently decoded.
 
 ### Changed
+- Removed unused `FIREWORKS_EXTRA_HEADERS_JSON` placeholder from secrets example and docs.
 - Deployment docs and runtime guidance now center on self-hosted Docker and `/api/health`.
 - README/agent-facing guidance updated for Docker-first, provider-agnostic operation.
 - AI provider runtime now uses provider abstraction across Anthropic, Fireworks, and Cerebras.
