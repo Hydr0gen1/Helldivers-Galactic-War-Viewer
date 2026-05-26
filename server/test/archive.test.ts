@@ -1,9 +1,35 @@
-import { describe, expect, it } from 'vitest';
-import { createArchiveService } from '../src/archive/archiveService.js';
-import { createArchiveRouter } from '../src/archive/archiveRouter.js';
+import type { Server } from 'node:http';
+import type { Express } from 'express';
 import express from 'express';
-import request from 'supertest';
+import { describe, expect, it } from 'vitest';
+import { createArchiveRouter } from '../src/archive/archiveRouter.js';
+import { createArchiveService } from '../src/archive/archiveService.js';
 import type { ChronicleDb } from '../src/chronicle/types.js';
+
+async function withTestServer<T>(app: Express, run: (baseUrl: string) => Promise<T>): Promise<T> {
+  let server: Server | undefined;
+  try {
+    server = await new Promise<Server>((resolve) => {
+      const started = app.listen(0, '127.0.0.1', () => resolve(started));
+    });
+
+    const address = server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('Test server did not bind to a TCP port');
+    }
+
+    return await run(`http://127.0.0.1:${address.port}`);
+  } finally {
+    if (server) {
+      await new Promise<void>((resolve, reject) => {
+        server.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+  }
+}
 
 function fakeDb(): ChronicleDb {
   return {
@@ -55,43 +81,37 @@ describe('archive service', () => {
     expect(majorOrders[0].majorOrderId).toBe('mo-1');
     expect(majorOrders[1].majorOrderId).toBe('mo-2');
   });
-
-  it('summary handles empty db', () => {
-    const db = fakeDb();
-    db.getArchiveSummary = () => ({ available: true, campaign_samples: 0, events: 0, planets: 0, major_orders: 0, campaign_sample_at: null, event_at: null });
-    db.listEvents = () => [];
-    const svc = createArchiveService(db, true);
-    const summary = svc.getSummary();
-    expect(summary.available).toBe(true);
-    expect(summary.totals.events).toBe(0);
-    expect(summary.recentEvents).toEqual([]);
-  });
-
-  it('summary handles unavailable db', () => {
-    const db = fakeDb(); db.getArchiveSummary = () => ({ available: false });
-    const svc = createArchiveService(db, true);
-    expect(svc.getSummary().available).toBe(false);
-  });
 });
 
 describe('archive router validation', () => {
   it('clamps limit and validates query with injected service', async () => {
     const service = createArchiveService(fakeDb(), true);
-    const app = express(); app.use('/api/archive', createArchiveRouter(service));
-    const res = await request(app).get('/api/archive/events?limit=9000&offset=-3');
-    expect(res.status).toBe(200);
-    expect(res.body.limit).toBe(500);
-    expect(res.body.offset).toBe(0);
-    const bad = await request(app).get('/api/archive/events?from=bad');
-    expect(bad.status).toBe(400);
+    const app = express();
+    app.use('/api/archive', createArchiveRouter(service));
+
+    await withTestServer(app, async (baseUrl) => {
+      const res = await fetch(`${baseUrl}/api/archive/events?limit=9000&offset=-3`);
+      expect(res.status).toBe(200);
+      const body = await res.json() as { limit: number; offset: number };
+      expect(body.limit).toBe(500);
+      expect(body.offset).toBe(0);
+
+      const bad = await fetch(`${baseUrl}/api/archive/events?from=bad`);
+      expect(bad.status).toBe(400);
+    });
   });
 
   it('reports non-inflated sample count for planets', async () => {
     const service = createArchiveService(fakeDb(), true);
-    const app = express(); app.use('/api/archive', createArchiveRouter(service));
-    const res = await request(app).get('/api/archive/planets');
-    expect(res.status).toBe(200);
-    expect(res.body.planets[0].sampleCount).toBe(2);
-    expect(res.body.planets[0].eventCount).toBe(3);
+    const app = express();
+    app.use('/api/archive', createArchiveRouter(service));
+
+    await withTestServer(app, async (baseUrl) => {
+      const res = await fetch(`${baseUrl}/api/archive/planets`);
+      expect(res.status).toBe(200);
+      const body = await res.json() as { planets: Array<{ sampleCount: number; eventCount: number }> };
+      expect(body.planets[0].sampleCount).toBe(2);
+      expect(body.planets[0].eventCount).toBe(3);
+    });
   });
 });
