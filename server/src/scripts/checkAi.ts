@@ -19,7 +19,7 @@ function getProviderEndpoint(): string {
 function getProviderModel(): string {
   switch (config.AI_PROVIDER) {
     case 'fireworks':
-      return config.FIREWORKS_MODEL;
+      return config.FIREWORKS_MODEL!;
     case 'cerebras':
       return config.CEREBRAS_MODEL;
     case 'anthropic':

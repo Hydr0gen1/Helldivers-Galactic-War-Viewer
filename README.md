@@ -48,7 +48,7 @@ Run (Fireworks):
 docker run --rm -p 8080:8080 \
   -e AI_PROVIDER=fireworks \
   -e FIREWORKS_API_KEY=your-key \
-  -e FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v3p1 \
+  -e FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v4-flash \
   -e HELLDIVERS_USER_AGENT="helldivers-intel/1.0 (self-host)" \
   helldivers-intel
 ```
@@ -134,10 +134,12 @@ Fireworks `.env` example:
 AI_PROVIDER=fireworks
 FIREWORKS_API_KEY=...
 FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
-FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v3p1
+FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v4-flash
 ```
 
-Normal Fireworks inference does not require a separate user id or partner key. Service-account user IDs are used to create/manage service accounts; runtime inference uses the API key.
+Choose the Fireworks model you want to run and set FIREWORKS_MODEL yourself.
+
+Normal Fireworks runtime inference uses API key + base URL + model path. No separate user ID or partner key is required for normal inference. Service-account user IDs are used to create/manage service accounts, while runtime inference uses the API key. Model choice is intentionally user-controlled.
 
 Run AI provider diagnostics:
 

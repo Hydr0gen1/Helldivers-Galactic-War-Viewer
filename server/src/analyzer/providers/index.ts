@@ -9,7 +9,7 @@ export function createAiProvider(): AiProvider {
     case 'anthropic':
       return createAnthropicProvider(config.ANTHROPIC_API_KEY!, config.ANTHROPIC_MODEL);
     case 'fireworks':
-      return createFireworksProvider(config.FIREWORKS_API_KEY!, config.FIREWORKS_MODEL, config.FIREWORKS_BASE_URL);
+      return createFireworksProvider(config.FIREWORKS_API_KEY!, config.FIREWORKS_MODEL!, config.FIREWORKS_BASE_URL);
     case 'cerebras':
       return createCerebrasProvider(config.CEREBRAS_API_KEY!, config.CEREBRAS_MODEL);
     default: {
