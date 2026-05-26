@@ -153,8 +153,10 @@ export function buildSnapshot(
     }
   }
 
-  const totalActivePlayers = campaigns.reduce((s, c) => s + (c.planet.players ?? 0), 0);
-
+  const totalActivePlayers = campaigns.reduce(
+    (s, c) => s + (c.planet.statistics?.playerCount ?? c.planet.players ?? 0),
+    0
+  );
   const normalizedCampaigns: NormalizedCampaign[] = campaigns.map(campaign => {
     const planet = campaign.planet;
     const campaignType = campaignTypeFromInt(campaign.type);
@@ -216,8 +218,12 @@ export function buildSnapshot(
       }
     }
 
-    const playerShare = totalActivePlayers > 0 ? (planet.players ?? 0) / totalActivePlayers : 0;
-    const history = updatePlayerHistory(planet.index, planet.players ?? 0, playerShare);
+    const playersOnPlanet = planet.statistics?.playerCount ?? planet.players ?? 0;
+
+    const playerShare = totalActivePlayers > 0
+      ? playersOnPlanet / totalActivePlayers
+      : 0;
+    const history = updatePlayerHistory(planet.index, playersOnPlanet, playerShare);
     const { rampingUp, rampUpUntil } = detectRampUp(planet.index, history);
 
     // Warp links

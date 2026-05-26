@@ -9,12 +9,17 @@ export const RegionSchema = z.object({
   regionTier: z.number().nullable().optional(),
 });
 
+export const PlanetStatisticsSchema = z.object({
+  playerCount: z.number().default(0),
+}).passthrough();
+
 export const PlanetSchema = z.object({
   index: z.number(),
   name: z.string(),
   sector: z.string().optional(),
   faction: z.string().optional(),
-  players: z.number().default(0),
+  players: z.number().optional(),
+  statistics: PlanetStatisticsSchema.optional(),
   health: z.number().default(1000000),
   maxHealth: z.number().default(1000000),
   regenPerSecond: z.number().default(0),
