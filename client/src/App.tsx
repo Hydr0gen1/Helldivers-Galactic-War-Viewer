@@ -7,6 +7,8 @@ import { GambitPanel } from './components/GambitPanel.js';
 import { SiegeMap } from './components/SiegeMap.js';
 import { RefreshControls } from './components/RefreshControls.js';
 import { LoadingSkeleton } from './components/LoadingSkeleton.js';
+import { WarArchivePanel } from './components/archive/WarArchivePanel.js';
+import { useState } from 'react';
 import type { WarSnapshot, Recommendation } from './api/types.js';
 
 function WarmingUp({ eta }: { eta?: number }) {
@@ -27,6 +29,7 @@ function WarmingUp({ eta }: { eta?: number }) {
 }
 
 export default function App() {
+  const [view, setView] = useState<'live' | 'archive'>('live');
   const snapshotQuery = useSnapshot();
   const recommendationQuery = useRecommendation();
 
@@ -53,8 +56,16 @@ export default function App() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gray-950">
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <div className="inline-flex bg-gray-900 border border-gray-800 rounded overflow-hidden">
+          <button onClick={() => setView('live')} className={`px-3 py-2 text-sm ${view === 'live' ? 'bg-cyan-700 text-white' : 'text-gray-300'}`}>Live Intel</button>
+          <button onClick={() => setView('archive')} className={`px-3 py-2 text-sm ${view === 'archive' ? 'bg-cyan-700 text-white' : 'text-gray-300'}`}>War Archive</button>
+        </div>
+      </div>
+      {view === 'archive' ? <WarArchivePanel /> : <>
       <WarStatusBanner snapshot={snapshot} recommendation={recommendation} />
 
       <CriticalAlerts alerts={recommendation?.critical_alerts ?? []} />
@@ -112,6 +123,7 @@ export default function App() {
         isFetching={snapshotQuery.isFetching || recommendationQuery.isFetching}
         lastUpdated={snapshot.generatedAt}
       />
+      </>}
     </div>
   );
 }

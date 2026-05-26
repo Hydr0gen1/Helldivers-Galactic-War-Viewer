@@ -84,3 +84,9 @@ Run before handoff:
 - Frontend War Archive UI and AI-written History Book remain future work.
 
 - Optional self-hosted auto-update polling is acceptable for server deployments; preserve local .env secrets and volume-backed chronicle data.
+
+
+## War Archive UI status
+- Stage 3 (frontend War Archive UI) is now implemented in the client and reads `/api/archive` endpoints.
+- Minor Order history may be unavailable from current upstream data; UI must keep showing a clean empty state when absent.
+- AI-written History Book narrative generation remains future work and is intentionally not implemented.

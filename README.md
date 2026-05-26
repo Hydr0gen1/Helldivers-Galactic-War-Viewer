@@ -174,7 +174,17 @@ Prefer curated markdown docs first; use raw XML only when needed.
 
 ## War Archive API
 
-Read-only endpoints under `/api/archive`: `summary`, `events`, `planets`, `planets/:planetId`, `campaigns`, and `major-orders` expose locally logged Chronicle facts. No frontend archive UI or AI narrative generation is included yet.
+Read-only endpoints under `/api/archive`: `summary`, `events`, `planets`, `planets/:planetId`, `campaigns`, and `major-orders` expose locally logged Chronicle facts.
+
+## War Archive UI (Stage 3)
+
+- The app now includes a player-facing **War Archive** tab that reads local `/api/archive` data.
+- Sections include archive overview, event timeline, planet list, planet history, progress charts, campaign summaries, and order archives.
+- Major Orders are shown from `/api/archive/major-orders`.
+- Minor Orders are shown when present in archive events (`minor_order_active`); otherwise a clear unavailable empty state is displayed.
+- Planet history graphs visualize liberation progress, efficiency, player concentration, and HP movement over time.
+- Archive views require local data collection first; empty/sparse states are shown until enough polling cycles accumulate.
+- AI-written History Book narrative generation remains future work.
 
 
 ## Optional self-hosted auto-update polling
