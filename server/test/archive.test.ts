@@ -83,6 +83,36 @@ describe('archive service', () => {
   });
 });
 
+
+  it('returns empty archive data and does not touch DB when disabled', () => {
+    const calls = { ensureReady: 0, listEvents: 0, listPlanets: 0, getPlanetHistory: 0, listCampaignGroups: 0, listMajorOrders: 0, getArchiveSummary: 0 };
+    const db = {
+      ...fakeDb(),
+      ensureReady: () => { calls.ensureReady += 1; return true; },
+      listEvents: () => { calls.listEvents += 1; return []; },
+      listPlanets: () => { calls.listPlanets += 1; return []; },
+      getPlanetHistory: () => { calls.getPlanetHistory += 1; return { progress: [], events: [] }; },
+      listCampaignGroups: () => { calls.listCampaignGroups += 1; return []; },
+      listMajorOrders: () => { calls.listMajorOrders += 1; return []; },
+      getArchiveSummary: () => { calls.getArchiveSummary += 1; return { available: true }; },
+    } as ChronicleDb;
+    const svc = createArchiveService(db, false);
+    expect(svc.listEvents({ limit: 10, offset: 0 })).toEqual([]);
+    expect(svc.listPlanets({ limit: 10, offset: 0 })).toEqual([]);
+    expect(svc.listCampaigns({ limit: 10 })).toEqual([]);
+    expect(svc.listMajorOrders(10)).toEqual([]);
+    expect(svc.getPlanetHistory({ planetId: 7, limit: 10 })).toEqual({ planetId: 7, planetName: null, progress: [], events: [], summary: { firstSeen: null, lastSeen: null, sampleCount: 0, eventCount: 0, latestLiberationPercent: null, latestPlayerShare: null } });
+    expect(calls).toEqual({ ensureReady: 0, listEvents: 0, listPlanets: 0, getPlanetHistory: 0, listCampaignGroups: 0, listMajorOrders: 0, getArchiveSummary: 0 });
+  });
+
+  it('expands major-order raw scan cap for better unique coverage', () => {
+    let requested = 0;
+    const db = { ...fakeDb(), listMajorOrders: (limit: number) => { requested = limit; return []; } } as ChronicleDb;
+    const svc = createArchiveService(db, true);
+    svc.listMajorOrders(50);
+    expect(requested).toBe(10000);
+  });
+
 describe('archive router validation', () => {
   it('clamps limit and validates query with injected service', async () => {
     const service = createArchiveService(fakeDb(), true);

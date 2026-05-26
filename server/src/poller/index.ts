@@ -20,16 +20,17 @@ const ASSIGN_GRACE_MS = 10 * 60_000;
 let running = false;
 let pollCount = 0;
 
-export function startPoller(onSnapshot?: (s: WarSnapshot) => void): void {
+export function startPoller(onSnapshot?: (s: WarSnapshot) => void): () => void {
   logger.info('Starting poller');
   poll(onSnapshot).catch(e => logger.error(e, 'Poll cycle error'));
-  setInterval(() => {
+  const interval = setInterval(() => {
     if (running) {
       logger.warn('Previous poll still running, skipping cycle');
       return;
     }
     poll(onSnapshot).catch(e => logger.error(e, 'Poll cycle error'));
   }, config.POLL_INTERVAL_MS);
+  return () => clearInterval(interval);
 }
 
 async function poll(onSnapshot?: (s: WarSnapshot) => void) {

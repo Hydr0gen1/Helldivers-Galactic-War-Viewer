@@ -7,6 +7,7 @@ import { createApiRouter } from './api/routes.js';
 import { startPoller } from './poller/index.js';
 import { startAnalyzer, analyzeIfNeeded } from './analyzer/index.js';
 import type { WarSnapshot } from './domain/types.js';
+import { closeWarChronicle } from './chronicle/warChronicle.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,17 +35,20 @@ const server = app.listen(config.PORT, () => {
   logger.info({ port: config.PORT, env: config.NODE_ENV }, 'Server listening');
 });
 
-startPoller((snapshot: WarSnapshot) => {
+const stopPoller = startPoller((snapshot: WarSnapshot) => {
   analyzeIfNeeded(snapshot).catch(e => logger.error(e, 'analyzeIfNeeded error'));
 });
 
-startAnalyzer();
+const stopAnalyzer = startAnalyzer();
 
 let shuttingDown = false;
 const shutdown = (signal: 'SIGTERM' | 'SIGINT') => {
   if (shuttingDown) return;
   shuttingDown = true;
-  logger.info({ signal }, 'Shutdown signal received, closing HTTP server');
+  logger.info({ signal }, 'Shutdown signal received, stopping workers and closing HTTP server');
+  stopPoller();
+  stopAnalyzer();
+  closeWarChronicle();
   const forceExitTimer = setTimeout(() => {
     logger.warn('Forced process exit after shutdown timeout');
     process.exit(1);
