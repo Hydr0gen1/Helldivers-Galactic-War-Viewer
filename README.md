@@ -116,6 +116,7 @@ Behavior notes:
 - `CEREBRAS_API_KEY`
 - `ANTHROPIC_MODEL`
 - `FIREWORKS_MODEL`
+- `FIREWORKS_BASE_URL`
 - `CEREBRAS_MODEL`
 - `ANALYZER_MAX_TOKENS`
 - `ANALYZER_TIMEOUT_MS`
@@ -126,6 +127,23 @@ Behavior notes:
 - `HELLDIVERS_MIN_REQUEST_GAP_MS`
 - `LOG_LEVEL`
 - `PORT`
+
+Fireworks `.env` example:
+
+```bash
+AI_PROVIDER=fireworks
+FIREWORKS_API_KEY=...
+FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
+FIREWORKS_MODEL=accounts/fireworks/models/deepseek-v3p1
+```
+
+Normal Fireworks inference does not require a separate user id or partner key. Service-account user IDs are used to create/manage service accounts; runtime inference uses the API key.
+
+Run AI provider diagnostics:
+
+```bash
+npm run check:ai
+```
 
 Important rules:
 - Only the selected provider API key is required.

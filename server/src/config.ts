@@ -8,6 +8,7 @@ const baseSchema = z.object({
   AI_PROVIDER: z.enum(['anthropic', 'fireworks', 'cerebras']).default('anthropic'),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   FIREWORKS_API_KEY: z.string().min(1).optional(),
+  FIREWORKS_BASE_URL: z.string().url().default('https://api.fireworks.ai/inference/v1'),
   CEREBRAS_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().default('claude-haiku-4-5-20251001'),
   FIREWORKS_MODEL: z.string().default('accounts/fireworks/models/deepseek-v3p1'),
@@ -49,6 +50,11 @@ function loadConfig(): Config {
     console.error('Invalid configuration:', result.error.format());
     process.exit(1);
   }
+
+  if (result.data.AI_PROVIDER === 'fireworks' && !result.data.FIREWORKS_MODEL.startsWith('accounts/')) {
+    console.warn('Fireworks model names usually need the full path, e.g. accounts/fireworks/models/deepseek-v3p1.');
+  }
+
   return result.data;
 }
 

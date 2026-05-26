@@ -1,9 +1,9 @@
 import type { AiProvider } from './types.js';
 import { createOpenAiCompatibleProvider } from './openaiCompatibleProvider.js';
 
-export function createFireworksProvider(apiKey: string, model: string): AiProvider {
+export function createFireworksProvider(apiKey: string, model: string, baseUrl: string): AiProvider {
   return createOpenAiCompatibleProvider({
-    baseUrl: 'https://api.fireworks.ai/inference/v1',
+    baseUrl,
     apiKey,
     model,
     providerLabel: 'Fireworks',
