@@ -32,7 +32,7 @@ cp .secrets.example.env .secrets.env
 ```
 
 - Edit `.env` for non-secret runtime configuration (for example `AI_PROVIDER`, `FIREWORKS_BASE_URL`, and `FIREWORKS_MODEL`).
-- Edit `.secrets.env` for provider API keys and sensitive/advanced provider headers (for example `FIREWORKS_EXTRA_HEADERS_JSON`).
+- Edit `.secrets.env` for provider API keys.
 - `.secrets.env` is local-only, gitignored, and must never be committed.
 - Docker Compose loads both `.env` and `.secrets.env` at runtime.
 - Only set the API key for the currently active `AI_PROVIDER`.

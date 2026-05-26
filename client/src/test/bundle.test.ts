@@ -16,7 +16,6 @@ describe('bundle security', () => {
       expect(content).not.toContain('ANTHROPIC_API_KEY');
       expect(content).not.toContain('FIREWORKS_API_KEY');
       expect(content).not.toContain('CEREBRAS_API_KEY');
-      expect(content).not.toContain('FIREWORKS_EXTRA_HEADERS_JSON');
       expect(content).not.toContain('.secrets.env');
     }
   });
