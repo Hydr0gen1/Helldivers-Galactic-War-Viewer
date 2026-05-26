@@ -15,7 +15,7 @@ const seenCriticalDefenses = new Set<string>();
 const aiProvider = createAiProvider();
 
 function truncate(raw: string, limit = 400): string {
-  return raw.length > limit ? `${raw.slice(0, limit)}…` : raw;
+  return raw.length > limit ? `${raw.slice(0, limit)}...` : raw;
 }
 
 export function parseRecommendationOutput(raw: string): Recommendation {
@@ -52,10 +52,27 @@ export function startAnalyzer(): () => void {
 }
 
 function scheduleAnalysis(): () => void {
-  analyze().catch(e => logger.error(e, 'Analyzer error'));
-  const interval = setInterval(() => {
-    analyze().catch(e => logger.error(e, 'Analyzer error'));
-  }, config.ANALYZER_INTERVAL_MS);
+  let running = false;
+
+  const runOnce = () => {
+    if (running) {
+      logger.warn('Analyzer tick skipped because previous analysis is still running');
+      return;
+    }
+
+    running = true;
+
+    analyze()
+      .catch(e => logger.error(e, 'Analyzer error'))
+      .finally(() => {
+        running = false;
+      });
+  };
+
+  runOnce();
+
+  const interval = setInterval(runOnce, config.ANALYZER_INTERVAL_MS);
+
   return () => clearInterval(interval);
 }
 
@@ -65,13 +82,13 @@ export async function analyzeIfNeeded(snapshot: WarSnapshot): Promise<void> {
       .filter(d => d.hoursRemaining < 6)
       .map(d => d.planetName)
   );
+
   for (const planetName of seenCriticalDefenses) {
     if (!currentCritical.has(planetName)) {
       seenCriticalDefenses.delete(planetName);
     }
   }
 
-  // Re-run immediately for new critical defenses
   const newCritical = snapshot.derived.defensesEndingSoon.filter(d => {
     if (d.hoursRemaining < 6 && !seenCriticalDefenses.has(d.planetName)) {
       seenCriticalDefenses.add(d.planetName);
@@ -81,15 +98,20 @@ export async function analyzeIfNeeded(snapshot: WarSnapshot): Promise<void> {
   });
 
   if (newCritical.length > 0) {
-    logger.info({ planets: newCritical.map(d => d.planetName) }, 'New critical defense detected, triggering immediate analysis');
+    logger.info(
+      { planets: newCritical.map(d => d.planetName) },
+      'New critical defense detected, triggering immediate analysis'
+    );
     await analyze();
   }
 }
 
 async function analyze(): Promise<void> {
+  logger.info('Analyzer tick starting');
+
   const cached = memoryStore.get<WarSnapshot>(CACHE_KEYS.SNAPSHOT);
   if (!cached) {
-    logger.debug('No snapshot available yet, skipping analysis');
+    logger.info('No snapshot available yet, skipping analysis');
     return;
   }
 
@@ -97,12 +119,23 @@ async function analyze(): Promise<void> {
   const userPrompt = buildUserPrompt(snapshot);
 
   try {
+    logger.info(
+      {
+        provider: config.AI_PROVIDER,
+        model: config.AI_PROVIDER === 'fireworks' ? config.FIREWORKS_MODEL : config.ANTHROPIC_MODEL,
+      },
+      'Analyzer AI call starting'
+    );
+
     const raw = await aiProvider.analyze({
       systemPrompt: SYSTEM_PROMPT,
       userPrompt,
       maxTokens: config.ANALYZER_MAX_TOKENS,
       timeoutMs: config.ANALYZER_TIMEOUT_MS,
     });
+
+    logger.info('Analyzer AI call completed');
+
     let recommendation: Recommendation;
     try {
       recommendation = parseRecommendationOutput(raw);
@@ -114,14 +147,16 @@ async function analyze(): Promise<void> {
           rawSnippet: truncate(raw),
           err: String(e2),
         },
-        'AI provider output unparseable after strict/extract/repair parse chain — keeping previous'
+        'AI provider output unparseable after strict/extract/repair parse chain - keeping previous'
       );
+
       const prev = memoryStore.get<Recommendation>(CACHE_KEYS.RECOMMENDATION);
       if (prev) {
         memoryStore.setWithGrace(
           CACHE_KEYS.RECOMMENDATION,
           { ...prev.value, degraded: true },
-          FRESH_MS, GRACE_MS
+          FRESH_MS,
+          GRACE_MS
         );
       }
       return;
@@ -131,12 +166,14 @@ async function analyze(): Promise<void> {
     logger.info('Recommendation updated');
   } catch (e) {
     logger.error(e, 'AI provider call failed');
+
     const prev = memoryStore.get<Recommendation>(CACHE_KEYS.RECOMMENDATION);
     if (prev) {
       memoryStore.setWithGrace(
         CACHE_KEYS.RECOMMENDATION,
         { ...prev.value, degraded: true },
-        FRESH_MS, GRACE_MS
+        FRESH_MS,
+        GRACE_MS
       );
     }
   }
